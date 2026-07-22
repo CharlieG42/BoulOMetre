@@ -8,9 +8,12 @@ Boul'O'Mètre est une application mobile conçue pour les joueurs de pétanque q
 
 ### Version 1 (Actuelle)
 - ✅ Accès à la caméra pour capturer les boules et le cochonnet
-- ✅ Détection visuelle des boules et du cochonnet
+- ✅ **Détection visuelle des boules et du cochonnet** (algorithme de détection de cercles)
 - ✅ Calcul et affichage des distances en centimètres
 - ✅ Interface intuitive avec overlay de détection en temps réel
+- ✅ Gestion des permissions caméra
+- ✅ Feedback visuel des détections
+- ✅ Tests unitaires pour les modèles et services
 
 ### Version 2 (À venir)
 - 🔜 Création de 2 équipes de 1, 2 ou 3 joueurs
@@ -43,7 +46,7 @@ Boul'O'Mètre est une application mobile conçue pour les joueurs de pétanque q
    ```
 
 3. **Configurer les permissions Android**
-   Ajoutez les permissions suivantes dans `android/app/src/main/AndroidManifest.xml` :
+   Les permissions sont gérées automatiquement par l'application, mais vous pouvez vérifier dans `android/app/src/main/AndroidManifest.xml` :
    ```xml
    <uses-permission android:name="android.permission.CAMERA" />
    <uses-feature android:name="android.hardware.camera" />
@@ -54,7 +57,7 @@ Boul'O'Mètre est une application mobile conçue pour les joueurs de pétanque q
    flutter run
    ```
 
-## 📂 Structure du projet
+## 🏗 Structure du projet
 
 ```
 lib/
@@ -78,19 +81,51 @@ lib/
 └── utils/                     # Utilitaires
     ├── constants.dart         # Constantes globales
     └── helpers.dart           # Fonctions utiles
+
+ test/
+├── models/
+│   ├── ball_test.dart
+│   └── measurement_test.dart
+├── services/
+│   └── image_processor_test.dart
+├── utils/
+│   └── helpers_test.dart
+└── widgets/
+    └── distance_card_test.dart
 ```
 
 ## 📦 Dépendances
 
 | Package | Version | Usage |
 |---------|---------|-------|
-| `camera` | ^0.10.5+7 | Accès à la caméra |
+| `camera` | 0.10.5+7 | Accès à la caméra |
 | `image` | ^4.1.3 | Traitement d'image |
+| `permission_handler` | ^11.2.0 | Gestion des permissions |
+| `vector_math` | ^2.1.4 | Calculs mathématiques |
+
+## 🧪 Tests
+
+Pour exécuter les tests :
+```bash
+flutter test
+```
+
+Les tests couvrent :
+- Modèles (`Ball`, `Measurement`)
+- Services (`ImageProcessor`)
+- Utilitaires (`Helpers`)
+- Widgets (`DistanceCard`)
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues !
+Les contributions sont les bienvenues ! Voici comment contribuer :
 
-## 📄 Licence
+1. Forker le projet
+2. Créer une branche pour votre fonctionnalité (`git checkout -b feat/ma-fonctionnalité`)
+3. Commiter vos modifications (`git commit -m 'feat: ajouter ma fonctionnalité'`)
+4. Pousser vers la branche (`git push origin feat/ma-fonctionnalité`)
+5. Ouvrir une Pull Request
+
+## 📜 Licence
 
 Ce projet est sous licence MIT.
