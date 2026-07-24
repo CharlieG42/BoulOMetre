@@ -7,7 +7,7 @@ class Helpers {
 
   static String formatAngle(double radians) {
     final degrees = radians * (180 / pi);
-    return degrees.toStringAsFixed(1) + '°';
+    return degrees.toStringAsFixed(1) + '\u00b0';
   }
 
   static bool isPointInCircle(double px, double py, double cx, double cy, double radius) {
@@ -32,5 +32,12 @@ class Helpers {
 
   static String generateId() {
     return DateTime.now().millisecondsSinceEpoch.toString();
+  }
+}
+
+// Extension pour ajouter firstOrNull sur les iterables
+extension IterableExtension<E> on Iterable<E> {
+  E? get firstOrNull {
+    return isEmpty ? null : first;
   }
 }

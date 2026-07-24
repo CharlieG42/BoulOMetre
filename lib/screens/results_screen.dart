@@ -11,7 +11,7 @@ class ResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final piglet = balls.firstWhere((ball) => ball.isPiglet, orElse: () => null);
+    final piglet = balls.where((ball) => ball.isPiglet).firstOrNull;
     
     if (piglet == null) {
       return Scaffold(
@@ -87,7 +87,7 @@ class ResultsScreen extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      'Position: (' + piglet.x.toStringAsFixed(1) + ', ' + piglet.y.toStringAsFixed(1) + ')',
+                      'Position: (${piglet.x.toStringAsFixed(1)}, ${piglet.y.toStringAsFixed(1)})',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -119,7 +119,7 @@ class ResultsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        'Boule la plus proche: ' + sortedBalls.first.id,
+                        'Boule la plus proche: ${sortedBalls.first.id}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class ResultsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppConstants.smallPadding / 2),
                       Text(
-                        'Distance: ' + Helpers.formatDistance(sortedBalls.first.distanceToPiglet),
+                        'Distance: ${Helpers.formatDistance(sortedBalls.first.distanceToPiglet)}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:image/image.dart' as img;
 import 'package:boul_o_metre/services/camera_service.dart';
 import 'package:boul_o_metre/services/image_processor.dart';
 import 'package:boul_o_metre/widgets/camera_overlay.dart';

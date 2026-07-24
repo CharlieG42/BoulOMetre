@@ -39,9 +39,9 @@ class CameraService {
     }
   }
 
-  void dispose() {
+  Future<void> dispose() async {
     if (!_isDisposed) {
-      _controller.dispose();
+      await _controller.dispose();
       _isDisposed = true;
       _isInitialized = false;
     }

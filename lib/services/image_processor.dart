@@ -30,16 +30,21 @@ class ImageProcessor {
     );
 
     final piglet = balls.firstWhere((ball) => ball.isPiglet);
-    for (final ball in balls.where((ball) => !ball.isPiglet)) {
+    final updatedBalls = <Ball>[];
+    for (final ball in balls) {
+      if (ball.isPiglet) {
+        updatedBalls.add(ball);
+        continue;
+      }
       final distance = _calculateDistance(
         piglet.x, piglet.y,
         ball.x, ball.y,
       );
       final distanceCm = pixelsToCm(distance, referenceDiameterPx: 50.0);
-      balls.firstWhere((b) => b.id == ball.id).distanceToPiglet = distanceCm;
+      updatedBalls.add(ball.copyWith(distanceToPiglet: distanceCm));
     }
 
-    return balls;
+    return updatedBalls;
   }
 
   static double _calculateDistance(double x1, double y1, double x2, double y2) {

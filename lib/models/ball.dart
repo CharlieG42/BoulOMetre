@@ -15,24 +15,6 @@ class Ball {
     this.isPiglet = false,
   });
 
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'x': x,
-    'y': y,
-    'radius': radius,
-    'distanceToPiglet': distanceToPiglet,
-    'isPiglet': isPiglet,
-  };
-
-  factory Ball.fromMap(Map<String, dynamic> map) => Ball(
-    id: map['id'],
-    x: map['x'],
-    y: map['y'],
-    radius: map['radius'],
-    distanceToPiglet: map['distanceToPiglet'],
-    isPiglet: map['isPiglet'],
-  );
-
   Ball copyWith({
     String? id,
     double? x,
@@ -50,4 +32,22 @@ class Ball {
       isPiglet: isPiglet ?? this.isPiglet,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'x': x,
+    'y': y,
+    'radius': radius,
+    'distanceToPiglet': distanceToPiglet,
+    'isPiglet': isPiglet,
+  };
+
+  factory Ball.fromMap(Map<String, dynamic> map) => Ball(
+    id: map['id'],
+    x: map['x'],
+    y: map['y'],
+    radius: map['radius'],
+    distanceToPiglet: map['distanceToPiglet'] ?? 0.0,
+    isPiglet: map['isPiglet'] ?? false,
+  );
 }

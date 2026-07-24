@@ -7,7 +7,7 @@ class BoulOMetreApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Boul'O'Mètre',
+      title: 'Boul\'O\'Mètre',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF8B4513),
