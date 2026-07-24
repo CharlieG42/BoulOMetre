@@ -11,7 +11,7 @@ class Measurement {
     this.teamId,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  Ball? get piglet => balls.firstWhere((ball) => ball.isPiglet, orElse: () => null);
+  Ball? get piglet => balls.where((ball) => ball.isPiglet).firstOrNull;
 
   Ball? get closestBall {
     final piglet = this.piglet;
