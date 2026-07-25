@@ -287,7 +287,8 @@ class _OverlayPainter extends CustomPainter {
 
   /// Dessine les boules et le cochonnet détectés
   void _drawBallsAndPiglet(Canvas canvas, Size size) {
-    final piglet = balls.firstWhere((ball) => ball.isPiglet, orElse: () => null);
+    // Utiliser firstOrNull au lieu de firstWhere avec orElse
+    final piglet = balls.where((ball) => ball.isPiglet).firstOrNull;
     
     if (piglet != null) {
       // Dessiner le cochonnet
@@ -340,20 +341,6 @@ class _OverlayPainter extends CustomPainter {
         ),
       );
     }
-
-    final ballPaint = Paint()
-      ..color = AppConstants.ballColor.withOpacity(0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-
-    final ballFillPaint = Paint()
-      ..color = AppConstants.ballColor.withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-
-    final linePaint = Paint()
-      ..color = Colors.white.withOpacity(0.9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
 
     final sortedBalls = [...balls.where((ball) => !ball.isPiglet)]
       ..sort((a, b) => a.distanceToPiglet.compareTo(b.distanceToPiglet));
@@ -428,6 +415,12 @@ class _OverlayPainter extends CustomPainter {
       }
     }
   }
+
+  // Déclarer linePaint au niveau de la classe pour qu'il soit accessible
+  final linePaint = Paint()
+    ..color = Colors.white.withOpacity(0.9)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.0;
 
   @override
   bool shouldRepaint(covariant _OverlayPainter oldDelegate) {

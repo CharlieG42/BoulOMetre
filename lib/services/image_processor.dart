@@ -39,22 +39,22 @@ class ImageProcessor {
     // On va essayer de détecter sa taille réelle
     final pigletRadius = _detectPigletRadius(image, pigletX, pigletY);
     
-    balls.add(
-      Ball(
-        id: 'piglet',
-        x: pigletX,
-        y: pigletY,
-        radius: pigletRadius,
-        isPiglet: true,
-      ),
+    // Ajouter le cochonnet à la liste
+    final piglet = Ball(
+      id: 'piglet',
+      x: pigletX,
+      y: pigletY,
+      radius: pigletRadius,
+      isPiglet: true,
     );
+    balls.add(piglet);
     
     // Détecter les boules dans l'image
     final detectedBalls = _detectBalls(image, pigletX, pigletY);
     balls.addAll(detectedBalls);
     
     // Calculer les distances par rapport au cochonnet
-    final piglet = balls.firstWhere((ball) => ball.isPiglet);
+    // On utilise piglet directement car on vient de l'ajouter
     final updatedBalls = <Ball>[];
     
     for (final ball in balls) {
@@ -284,6 +284,7 @@ class ImageProcessor {
     // Chercher dans une petite zone autour du point de départ
     for (int y = max(0, startY - searchRadius); y <= min(image.height - 1, startY + searchRadius); y += 2) {
       for (int x = max(0, startX - searchRadius); x <= min(image.width - 1, startX + searchRadius); x += 2) {
+        // Sauter si déjà visité
         // Tester différents rayons
         for (int r = _minBallRadiusPx; r <= _maxBallRadiusPx; r += 3) {
           // Vérifier que le cercle est dans l'image
