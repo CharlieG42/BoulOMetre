@@ -91,7 +91,7 @@ class ImageProcessor {
     final int centerYi = centerY.toInt();
     
     // Prendre la couleur du centre comme référence
-    final centerPixel = image.getPixelSafe(centerXi, centerYi);
+    final centerPixel = image.getPixel(centerXi, centerYi);
     final centerBrightness = _getBrightness(centerPixel);
     
     // Scanner vers l'extérieur jusqu'à trouver un bord
@@ -105,7 +105,7 @@ class ImageProcessor {
         final y = centerYi + r * sin(angle);
         
         if (x >= 0 && x < width && y >= 0 && y < height) {
-          final pixel = image.getPixelSafe(x.toInt(), y.toInt());
+          final pixel = image.getPixel(x.toInt(), y.toInt());
           final brightness = _getBrightness(pixel);
           
           // Calculer la différence de luminosité
@@ -241,7 +241,7 @@ class ImageProcessor {
     
     for (int y = max(0, centerY - radius); y <= min(image.height - 1, centerY + radius); y++) {
       for (int x = max(0, centerX - radius); x <= min(image.width - 1, centerX + radius); x++) {
-        final pixel = image.getPixelSafe(x, y);
+        final pixel = image.getPixel(x, y);
         final brightness = _getBrightness(pixel);
         sum += brightness.toInt();
         count++;
@@ -301,7 +301,7 @@ class ImageProcessor {
     int totalPoints = 0;
     
     final pointsToCheck = 20;
-    final centerPixel = image.getPixelSafe(centerX, centerY);
+    final centerPixel = image.getPixel(centerX, centerY);
     final centerBrightness = _getBrightness(centerPixel);
     
     for (int i = 0; i < pointsToCheck; i++) {
@@ -310,7 +310,7 @@ class ImageProcessor {
       final y = centerY + radius * sin(angle);
       
       if (x >= 0 && x < image.width && y >= 0 && y < image.height) {
-        final pixel = image.getPixelSafe(x.toInt(), y.toInt());
+        final pixel = image.getPixel(x.toInt(), y.toInt());
         final brightness = _getBrightness(pixel);
         
         final contrast = (brightness - centerBrightness).abs();
@@ -350,7 +350,7 @@ class ImageProcessor {
         
         for (int ky = -1; ky <= 1; ky++) {
           for (int kx = -1; kx <= 1; kx++) {
-            final pixel = image.getPixelSafe(x + kx, y + ky);
+            final pixel = image.getPixel(x + kx, y + ky);
             final gray = _getBrightness(pixel).toInt();
             
             gx += gray * sobelX[ky + 1][kx + 1];
@@ -424,7 +424,7 @@ class ImageProcessor {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         if (!visited[y][x]) {
-          final pixel = image.getPixelSafe(x, y);
+          final pixel = image.getPixel(x, y);
           final gray = _getBrightness(pixel);
           
           if (gray >= threshold) {
@@ -441,7 +441,7 @@ class ImageProcessor {
                 final ny = cy + dy;
                 
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
-                  final neighborPixel = image.getPixelSafe(nx, ny);
+                  final neighborPixel = image.getPixel(nx, ny);
                   final neighborGray = _getBrightness(neighborPixel);
                   
                   if (neighborGray >= threshold) {
@@ -475,7 +475,7 @@ class ImageProcessor {
       final y = centerY + radius * sin(angle);
       
       if (x >= 0 && x < edges.width && y >= 0 && y < edges.height) {
-        final pixel = edges.getPixelSafe(x.toInt(), y.toInt());
+        final pixel = edges.getPixel(x.toInt(), y.toInt());
         final gray = _getBrightness(pixel);
         
         if (gray >= 100) {

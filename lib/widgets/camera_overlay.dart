@@ -194,7 +194,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Texte
     final textPainter = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: isLevel ? 'Niveau OK' : 'Incliné',
         style: TextStyle(
           color: isLevel ? Colors.green : Colors.orange,
