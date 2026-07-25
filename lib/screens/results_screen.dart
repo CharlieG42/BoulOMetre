@@ -113,7 +113,7 @@ class ResultsScreen extends StatelessWidget {
             if (sortedBalls.isNotEmpty) ...[
               const SizedBox(height: AppConstants.smallPadding),
               Card(
-                color: AppConstants.closestBallColor.withOpacity(0.1),
+                color: AppConstants.closestBallColor.withValues(alpha: 0.1),
                 child: Padding(
                   padding: const EdgeInsets.all(AppConstants.defaultPadding),
                   child: Column(

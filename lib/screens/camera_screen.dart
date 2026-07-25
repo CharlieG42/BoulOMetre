@@ -61,7 +61,7 @@ class _CameraScreenState extends State<CameraScreen> {
       if (mounted) {
         setState(() {
           _isCameraReady = false;
-          _errorMessage = 'Erreur caméra: ' + e.toString();
+          _errorMessage = 'Erreur caméra: $e';
         });
       }
     }
@@ -86,25 +86,6 @@ class _CameraScreenState extends State<CameraScreen> {
     };
     
     _orientationService.start();
-  }
-
-  /// Met à jour la position du centre (appelé quand l'utilisateur touche l'écran)
-  void _updateCenterPosition(Offset localPosition, Size previewSize) {
-    // Convertir la position locale en coordonnées normalisées (0-1)
-    final normalizedX = localPosition.dx / previewSize.width;
-    final normalizedY = localPosition.dy / previewSize.height;
-    
-    setState(() {
-      _centerX = normalizedX.clamp(0.0, 1.0);
-      _centerY = normalizedY.clamp(0.0, 1.0);
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Position du cochonnet mise à jour'),
-        duration: Duration(seconds: 1),
-      ),
-    );
   }
 
   /// Réinitialise la position du centre
@@ -167,7 +148,7 @@ class _CameraScreenState extends State<CameraScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ' + e.toString())),
+          SnackBar(content: Text('Erreur: $e')),
         );
       }
     } finally {
@@ -184,7 +165,7 @@ class _CameraScreenState extends State<CameraScreen> {
       await _cameraService.setFlashMode(newMode);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur flash: ' + e.toString())),
+        SnackBar(content: Text('Erreur flash: $e')),
       );
     }
   }
@@ -197,7 +178,7 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur caméra: ' + e.toString())),
+        SnackBar(content: Text('Erreur caméra: $e')),
       );
     }
   }
@@ -337,9 +318,9 @@ class _CameraScreenState extends State<CameraScreen> {
             right: AppConstants.defaultPadding,
             child: FloatingActionButton(
               onPressed: _resetCenterPosition,
-              backgroundColor: Colors.white.withOpacity(0.9),
+              backgroundColor: Colors.white.withValues(alpha: 0.9),
               foregroundColor: AppConstants.primaryColor,
-              child: const Icon(Icons.exposure_center, size: 24),
+              child: const Icon(Icons.center_focus_strong, size: 24),
               heroTag: 'resetCenter',
             ),
           ),
