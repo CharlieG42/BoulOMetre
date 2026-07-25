@@ -159,7 +159,7 @@ class _OverlayPainter extends CustomPainter {
     const indicatorWidth = 150.0;
     const indicatorHeight = 30.0;
     final indicatorX = size.width - indicatorWidth - 20;
-    final indicatorY = 50.0;
+    const indicatorY = 50.0;
     
     // Fond de l'indicateur
     final bgPaint = Paint()
@@ -194,7 +194,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Texte
     final textPainter = TextPainter(
-      text: TextSpan(
+      text: const TextSpan(
         text: isLevel ? 'Niveau OK' : 'Incliné',
         style: TextStyle(
           color: isLevel ? Colors.green : Colors.orange,
@@ -229,7 +229,7 @@ class _OverlayPainter extends CustomPainter {
   void _drawInclinationVisual(Canvas canvas, Size size) {
     const visualSize = 80.0;
     final visualX = size.width - visualSize - 20;
-    final visualY = 100.0;
+    const visualY = 100.0;
     
     // Cercle de base
     final circlePaint = Paint()
@@ -384,7 +384,7 @@ class _OverlayPainter extends CustomPainter {
         final distanceCm = ball.distanceToPiglet;
         final text = Helpers.formatDistance(distanceCm);
         final textPainter = TextPainter(
-          text: TextSpan(
+          text: const TextSpan(
             text: text,
             style: TextStyle(
               color: isClosest ? AppConstants.closestBallColor : Colors.white,

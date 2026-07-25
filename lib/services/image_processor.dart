@@ -6,7 +6,6 @@ import 'package:boul_o_metre/models/ball.dart';
 class ImageProcessor {
   // Diamètres réels en cm
   static const double realBallDiameterCm = 7.5;
-  static const double realPigletDiameterCm = 3.0;
   
   // Rayons minimaux et maximaux en pixels (à ajuster selon la distance)
   static const int minBallRadiusPx = 15;
@@ -80,16 +79,20 @@ class ImageProcessor {
     final width = image.width;
     final height = image.height;
     
-    int maxRadius = min(
-      maxPigletRadiusPx,
-      min(centerX, centerY, width - centerX, height - centerY).floor() - 5,
-    );
+    // Calculer le rayon maximum possible
+    final maxPossibleRadius = min(
+      min(centerX, width - centerX),
+      min(centerY, height - centerY),
+    ).floor() - 5;
+    
+    final int maxRadius = min(maxPigletRadiusPx, maxPossibleRadius);
     
     final int centerXi = centerX.toInt();
     final int centerYi = centerY.toInt();
     
     // Prendre la couleur du centre comme référence
-    final centerColor = image.getPixel(centerXi, centerYi);
+    final centerPixel = image.getPixelSafe(centerXi, centerYi);
+    final centerBrightness = _getBrightness(centerPixel);
     
     // Scanner vers l'extérieur jusqu'à trouver un bord
     for (int r = minPigletRadiusPx; r <= maxRadius; r += 2) {
@@ -102,12 +105,13 @@ class ImageProcessor {
         final y = centerYi + r * sin(angle);
         
         if (x >= 0 && x < width && y >= 0 && y < height) {
-          final pixelColor = image.getPixel(x.toInt(), y.toInt());
+          final pixel = image.getPixelSafe(x.toInt(), y.toInt());
+          final brightness = _getBrightness(pixel);
           
-          // Calculer la différence de couleur
-          final colorDiff = _colorDifference(centerColor, pixelColor);
+          // Calculer la différence de luminosité
+          final brightnessDiff = (brightness - centerBrightness).abs();
           
-          if (colorDiff > edgeThreshold) {
+          if (brightnessDiff > edgeThreshold) {
             edgeCount++;
           }
         }
@@ -143,6 +147,8 @@ class ImageProcessor {
     
     // Filtrer les cercles qui correspondent à des boules
     for (final circle in circles) {
+      final cx = circle.$1;
+      final cy = circle.$2;
       final radius = circle.$3;
       
       if (radius < minBallRadiusPx || radius > maxBallRadiusPx) {
@@ -151,22 +157,22 @@ class ImageProcessor {
       
       final distanceToPiglet = _calculateDistance(
         pigletX, pigletY,
-        circle.$1.toDouble(), circle.$2.toDouble(),
+        cx.toDouble(), cy.toDouble(),
       );
       
       if (distanceToPiglet < excludeRadius) {
         continue;
       }
       
-      if (!_isValidCircle(edges, circle.$1, circle.$2, radius)) {
+      if (!_isValidCircle(edges, cx, cy, radius)) {
         continue;
       }
       
       balls.add(
         Ball(
           id: 'ball_${balls.length + 1}',
-          x: circle.$1.toDouble(),
-          y: circle.$2.toDouble(),
+          x: cx.toDouble(),
+          y: cy.toDouble(),
           radius: radius.toDouble(),
           isPiglet: false,
         ),
@@ -235,7 +241,7 @@ class ImageProcessor {
     
     for (int y = max(0, centerY - radius); y <= min(image.height - 1, centerY + radius); y++) {
       for (int x = max(0, centerX - radius); x <= min(image.width - 1, centerX + radius); x++) {
-        final pixel = image.getPixel(x, y);
+        final pixel = image.getPixelSafe(x, y);
         final brightness = _getBrightness(pixel);
         sum += brightness.toInt();
         count++;
@@ -247,14 +253,12 @@ class ImageProcessor {
 
   /// Extrait la luminosité d'un pixel
   static double _getBrightness(int pixel) {
-    // La bibliothèque image utilise ARGB
-    // On extrait les composantes
-    final a = (pixel >> 24) & 0xFF;
+    // Extraire les composantes ARGB d'un int
     final r = (pixel >> 16) & 0xFF;
     final g = (pixel >> 8) & 0xFF;
     final b = pixel & 0xFF;
     
-    // Luminosité perçue
+    // Luminosité perçue (formule standard)
     return 0.299 * r + 0.587 * g + 0.114 * b;
   }
 
@@ -297,7 +301,7 @@ class ImageProcessor {
     int totalPoints = 0;
     
     final pointsToCheck = 20;
-    final centerPixel = image.getPixel(centerX, centerY);
+    final centerPixel = image.getPixelSafe(centerX, centerY);
     final centerBrightness = _getBrightness(centerPixel);
     
     for (int i = 0; i < pointsToCheck; i++) {
@@ -306,7 +310,7 @@ class ImageProcessor {
       final y = centerY + radius * sin(angle);
       
       if (x >= 0 && x < image.width && y >= 0 && y < image.height) {
-        final pixel = image.getPixel(x.toInt(), y.toInt());
+        final pixel = image.getPixelSafe(x.toInt(), y.toInt());
         final brightness = _getBrightness(pixel);
         
         final contrast = (brightness - centerBrightness).abs();
@@ -346,7 +350,7 @@ class ImageProcessor {
         
         for (int ky = -1; ky <= 1; ky++) {
           for (int kx = -1; kx <= 1; kx++) {
-            final pixel = image.getPixel(x + kx, y + ky);
+            final pixel = image.getPixelSafe(x + kx, y + ky);
             final gray = _getBrightness(pixel).toInt();
             
             gx += gray * sobelX[ky + 1][kx + 1];
@@ -357,8 +361,8 @@ class ImageProcessor {
         final magnitude = sqrt(gx * gx + gy * gy).toInt();
         final edgeValue = min(255, magnitude);
         
-        // Créer un pixel gris
-        final pixelValue = (edgeValue << 16) | (edgeValue << 8) | edgeValue;
+        // Créer un pixel gris (ARGB: 0xAARRGGBB)
+        final pixelValue = (0xFF << 24) | (edgeValue << 16) | (edgeValue << 8) | edgeValue;
         edges.setPixel(x, y, pixelValue);
       }
     }
@@ -420,7 +424,7 @@ class ImageProcessor {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         if (!visited[y][x]) {
-          final pixel = image.getPixel(x, y);
+          final pixel = image.getPixelSafe(x, y);
           final gray = _getBrightness(pixel);
           
           if (gray >= threshold) {
@@ -437,7 +441,7 @@ class ImageProcessor {
                 final ny = cy + dy;
                 
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
-                  final neighborPixel = image.getPixel(nx, ny);
+                  final neighborPixel = image.getPixelSafe(nx, ny);
                   final neighborGray = _getBrightness(neighborPixel);
                   
                   if (neighborGray >= threshold) {
@@ -471,7 +475,7 @@ class ImageProcessor {
       final y = centerY + radius * sin(angle);
       
       if (x >= 0 && x < edges.width && y >= 0 && y < edges.height) {
-        final pixel = edges.getPixel(x.toInt(), y.toInt());
+        final pixel = edges.getPixelSafe(x.toInt(), y.toInt());
         final gray = _getBrightness(pixel);
         
         if (gray >= 100) {
@@ -505,23 +509,6 @@ class ImageProcessor {
   /// Calcule la distance entre deux points
   static double _calculateDistance(double x1, double y1, double x2, double y2) {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-  }
-
-  /// Calcule la différence de couleur entre deux pixels
-  static double _colorDifference(int color1, int color2) {
-    // Extraire les composantes ARGB
-    final r1 = (color1 >> 16) & 0xFF;
-    final g1 = (color1 >> 8) & 0xFF;
-    final b1 = color1 & 0xFF;
-    
-    final r2 = (color2 >> 16) & 0xFF;
-    final g2 = (color2 >> 8) & 0xFF;
-    final b2 = color2 & 0xFF;
-    
-    // Distance euclidienne dans l'espace RGB
-    return sqrt(
-      pow(r1 - r2, 2) + pow(g1 - g2, 2) + pow(b1 - b2, 2),
-    );
   }
 
   /// Convertit des pixels en centimètres
