@@ -2,12 +2,12 @@ import 'dart:math';
 
 class Helpers {
   static String formatDistance(double cm) {
-    return cm.toStringAsFixed(1) + ' cm';
+    return '${cm.toStringAsFixed(1)} cm';
   }
 
   static String formatAngle(double radians) {
     final degrees = radians * (180 / pi);
-    return degrees.toStringAsFixed(1) + '\u00b0';
+    return '${degrees.toStringAsFixed(1)}°';
   }
 
   static bool isPointInCircle(double px, double py, double cx, double cy, double radius) {

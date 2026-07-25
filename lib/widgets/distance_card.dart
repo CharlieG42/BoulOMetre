@@ -18,7 +18,7 @@ class DistanceCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: AppConstants.smallPadding),
       elevation: isClosest ? 4 : 2,
-      color: isClosest ? AppConstants.closestBallColor.withOpacity(0.1) : null,
+      color: isClosest ? AppConstants.closestBallColor.withValues(alpha: 0.1) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppConstants.borderRadius),
         side: isClosest
@@ -43,14 +43,14 @@ class DistanceCard extends StatelessWidget {
           ],
         ),
         title: Text(
-          'Boule ' + ball.id,
+          'Boule ${ball.id}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isClosest ? AppConstants.closestBallColor : null,
           ),
         ),
         subtitle: Text(
-          'Position: (' + ball.x.toStringAsFixed(1) + ', ' + ball.y.toStringAsFixed(1) + ')',
+          'Position: (${ball.x.toStringAsFixed(1)}, ${ball.y.toStringAsFixed(1)})',
           style: TextStyle(
             color: Colors.grey[600],
             fontSize: 12,
@@ -73,7 +73,7 @@ class DistanceCard extends StatelessWidget {
                 'La plus proche',
                 style: TextStyle(
                   fontSize: 10,
-                  color: AppConstants.closestBallColor,
+                  color: Colors.amber,
                 ),
               ),
           ],

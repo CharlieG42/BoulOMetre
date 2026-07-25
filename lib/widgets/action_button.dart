@@ -3,8 +3,8 @@ import 'package:boul_o_metre/utils/constants.dart';
 
 class ActionButton extends StatelessWidget {
   final String text;
-  final IconData? icon;
   final VoidCallback? onPressed;
+  final IconData? icon;
   final Color? backgroundColor;
   final Color? textColor;
   final bool isLoading;
@@ -12,8 +12,8 @@ class ActionButton extends StatelessWidget {
   const ActionButton({
     super.key,
     required this.text,
-    this.icon,
     this.onPressed,
+    this.icon,
     this.backgroundColor,
     this.textColor,
     this.isLoading = false,
@@ -34,8 +34,16 @@ class ActionButton extends StatelessWidget {
                   color: Colors.white,
                 ),
               )
-            : (icon != null ? Icon(icon) : const SizedBox(width: 24)),
-        label: Text(text),
+            : Icon(icon ?? Icons.check, color: textColor ?? Colors.white),
+        label: isLoading
+            ? const Text('Chargement...')
+            : Text(
+                text,
+                style: TextStyle(
+                  color: textColor ?? Colors.white,
+                  fontSize: 16,
+                ),
+              ),
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppConstants.primaryColor,
           foregroundColor: textColor ?? Colors.white,
@@ -46,7 +54,7 @@ class ActionButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           ),
-          disabledBackgroundColor: AppConstants.primaryColor.withOpacity(0.5),
+          disabledBackgroundColor: AppConstants.primaryColor.withValues(alpha: 0.5),
         ),
       ),
     );

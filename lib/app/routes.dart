@@ -17,7 +17,7 @@ class Routes {
       if (args is List<Ball>) {
         return ResultsScreen(balls: args);
       }
-      return ResultsScreen(balls: []);
+      return const ResultsScreen(balls: []);
     },
   };
 }

@@ -5,22 +5,21 @@ import 'package:boul_o_metre/models/ball.dart';
 /// Service de traitement d'image pour la détection des boules de pétanque
 class ImageProcessor {
   // Diamètres réels en cm
-  static const double _realBallDiameterCm = 7.5;
-  static const double _realPigletDiameterCm = 3.0;
+  static const double realBallDiameterCm = 7.5;
+  static const double realPigletDiameterCm = 3.0;
   
   // Rayons minimaux et maximaux en pixels (à ajuster selon la distance)
-  static const int _minBallRadiusPx = 15;
-  static const int _maxBallRadiusPx = 100;
-  static const int _minPigletRadiusPx = 5;
-  static const int _maxPigletRadiusPx = 40;
+  static const int minBallRadiusPx = 15;
+  static const int maxBallRadiusPx = 100;
+  static const int minPigletRadiusPx = 5;
+  static const int maxPigletRadiusPx = 40;
   
   // Seuil pour la détection des bords
-  static const int _edgeThreshold = 40;
+  static const int edgeThreshold = 40;
   
   // Position centrale pour le cochonnet (en % de l'image)
-  static const double _centerXPercent = 0.5;
-  static const double _centerYPercent = 0.5;
-  static const double _centerTolerance = 0.15; // Tolérance de 15% autour du centre
+  static const double centerXPercent = 0.5;
+  static const double centerYPercent = 0.5;
 
   /// Détecte les boules et positionne le cochonnet au centre
   /// 
@@ -32,11 +31,10 @@ class ImageProcessor {
     final height = image.height;
     
     // Position du centre (cochonnet)
-    final pigletX = centerX ?? width * _centerXPercent;
-    final pigletY = centerY ?? height * _centerYPercent;
+    final pigletX = centerX ?? width * centerXPercent;
+    final pigletY = centerY ?? height * centerYPercent;
     
     // Créer le cochonnet au centre avec un rayon estimé
-    // On va essayer de détecter sa taille réelle
     final pigletRadius = _detectPigletRadius(image, pigletX, pigletY);
     
     // Ajouter le cochonnet à la liste
@@ -54,7 +52,6 @@ class ImageProcessor {
     balls.addAll(detectedBalls);
     
     // Calculer les distances par rapport au cochonnet
-    // On utilise piglet directement car on vient de l'ajouter
     final updatedBalls = <Ball>[];
     
     for (final ball in balls) {
@@ -69,7 +66,6 @@ class ImageProcessor {
       );
       
       // Calculer l'échelle basée sur le diamètre du cochonnet
-      // Si on a détecté le rayon du cochonnet, on utilise ça comme référence
       final referenceDiameterPx = piglet.radius * 2;
       final distanceCm = pixelsToCm(distance, referenceDiameterPx: referenceDiameterPx);
       
@@ -80,19 +76,15 @@ class ImageProcessor {
   }
 
   /// Détecte le rayon du cochonnet au centre de l'image
-  /// en analysant les pixels autour du point central
   static double _detectPigletRadius(img.Image image, double centerX, double centerY) {
     final width = image.width;
     final height = image.height;
     
-    // On va scanner des cercles concentriques autour du centre
-    // et détecter où se trouve le bord
     int maxRadius = min(
-      _maxPigletRadiusPx,
+      maxPigletRadiusPx,
       min(centerX, centerY, width - centerX, height - centerY).floor() - 5,
     );
     
-    // Convertir en entier pour le scan
     final int centerXi = centerX.toInt();
     final int centerYi = centerY.toInt();
     
@@ -100,9 +92,8 @@ class ImageProcessor {
     final centerColor = image.getPixel(centerXi, centerYi);
     
     // Scanner vers l'extérieur jusqu'à trouver un bord
-    for (int r = _minPigletRadiusPx; r <= maxRadius; r += 2) {
-      // Vérifier plusieurs points sur le cercle
-      final pointsToCheck = 16; // 16 points autour du cercle
+    for (int r = minPigletRadiusPx; r <= maxRadius; r += 2) {
+      final pointsToCheck = 16;
       int edgeCount = 0;
       
       for (int i = 0; i < pointsToCheck; i++) {
@@ -116,20 +107,18 @@ class ImageProcessor {
           // Calculer la différence de couleur
           final colorDiff = _colorDifference(centerColor, pixelColor);
           
-          if (colorDiff > _edgeThreshold) {
+          if (colorDiff > edgeThreshold) {
             edgeCount++;
           }
         }
       }
       
-      // Si on a détecté un bord sur au moins la moitié des points
       if (edgeCount >= pointsToCheck ~/ 2) {
         return r.toDouble();
       }
     }
     
-    // Si on n'a pas trouvé de bord, retourner un rayon par défaut
-    return _maxPigletRadiusPx * 0.6;
+    return maxPigletRadiusPx * 0.6;
   }
 
   /// Détecte les boules dans l'image en excluant la zone du cochonnet
@@ -138,10 +127,9 @@ class ImageProcessor {
     final width = image.width;
     final height = image.height;
     
-    // Zone à exclure autour du cochonnet (pour éviter de le détecter comme une boule)
-    final excludeRadius = _maxPigletRadiusPx * 1.5;
+    final excludeRadius = maxPigletRadiusPx * 1.5;
     
-    // Convertir l'image en niveaux de gris pour la détection de bords
+    // Convertir l'image en niveaux de gris
     final grayscale = img.grayscale(image);
     
     // Appliquer un flou pour réduire le bruit
@@ -155,42 +143,36 @@ class ImageProcessor {
     
     // Filtrer les cercles qui correspondent à des boules
     for (final circle in circles) {
-      final radius = circle.$2;
+      final radius = circle.$3;
       
-      // Vérifier la taille (doit correspondre à une boule)
-      if (radius < _minBallRadiusPx || radius > _maxBallRadiusPx) {
+      if (radius < minBallRadiusPx || radius > maxBallRadiusPx) {
         continue;
       }
       
-      // Vérifier que le cercle n'est pas trop proche du cochonnet
       final distanceToPiglet = _calculateDistance(
         pigletX, pigletY,
-        circle.$0, circle.$1,
+        circle.$1.toDouble(), circle.$2.toDouble(),
       );
       
       if (distanceToPiglet < excludeRadius) {
         continue;
       }
       
-      // Vérifier que le cercle est bien circulaire (ratio largeur/hauteur)
-      // On peut aussi vérifier la circularité en analysant les pixels
-      if (!_isValidCircle(edges, circle.$0, circle.$1, radius)) {
+      if (!_isValidCircle(edges, circle.$1, circle.$2, radius)) {
         continue;
       }
       
       balls.add(
         Ball(
           id: 'ball_${balls.length + 1}',
-          x: circle.$0.toDouble(),
-          y: circle.$1.toDouble(),
+          x: circle.$1.toDouble(),
+          y: circle.$2.toDouble(),
           radius: radius.toDouble(),
           isPiglet: false,
         ),
       );
     }
     
-    // Si on n'a pas trouvé de boules avec la détection automatique,
-    // essayer une méthode alternative plus simple
     if (balls.isEmpty) {
       return _detectBallsSimple(image, pigletX, pigletY, excludeRadius);
     }
@@ -199,40 +181,33 @@ class ImageProcessor {
   }
 
   /// Méthode simplifiée de détection des boules
-  /// Scanne l'image en cherchant des zones sombres (boules métalliques)
   static List<Ball> _detectBallsSimple(img.Image image, double pigletX, double pigletY, double excludeRadius) {
     final List<Ball> balls = [];
     final width = image.width;
     final height = image.height;
     
-    // Diviser l'image en zones et chercher des cercles
     final cellSize = 40;
-    final visited = List.filled(height, List.filled(width, false));
+    final visited = List.generate(height, (_) => List.filled(width, false));
     
     for (int y = 0; y < height; y += cellSize ~/ 2) {
       for (int x = 0; x < width; x += cellSize ~/ 2) {
-        // Sauter si déjà visité
         if (visited[y][x]) continue;
         
-        // Vérifier que ce n'est pas dans la zone du cochonnet
         final distanceToPiglet = _calculateDistance(pigletX, pigletY, x.toDouble(), y.toDouble());
         if (distanceToPiglet < excludeRadius) {
           continue;
         }
         
-        // Vérifier si ce point fait partie d'une zone sombre (boule)
         final avgBrightness = _getAverageBrightness(image, x, y, cellSize ~/ 2);
         
-        // Les boules métalliques sont généralement sombres
-        // On cherche des zones avec une luminosité moyenne faible
         if (avgBrightness < 100) {
-          // Essayer de trouver le centre et le rayon
           final circle = _findCircleCenter(image, x, y, cellSize);
           if (circle != null) {
-            final (cx, cy, radius) = circle;
+            final cx = circle.$1;
+            final cy = circle.$2;
+            final radius = circle.$3;
             
-            // Vérifier la taille
-            if (radius >= _minBallRadiusPx && radius <= _maxBallRadiusPx) {
+            if (radius >= minBallRadiusPx && radius <= maxBallRadiusPx) {
               balls.add(
                 Ball(
                   id: 'ball_${balls.length + 1}',
@@ -243,7 +218,6 @@ class ImageProcessor {
                 ),
               );
               
-              // Marquer la zone comme visitée
               _markVisited(visited, cx, cy, radius + 10, width, height);
             }
           }
@@ -262,16 +236,26 @@ class ImageProcessor {
     for (int y = max(0, centerY - radius); y <= min(image.height - 1, centerY + radius); y++) {
       for (int x = max(0, centerX - radius); x <= min(image.width - 1, centerX + radius); x++) {
         final pixel = image.getPixel(x, y);
-        // Luminosité = 0.299*R + 0.587*G + 0.114*B
-        final brightness = 0.299 * img.getRed(pixel) + 
-                          0.587 * img.getGreen(pixel) + 
-                          0.114 * img.getBlue(pixel);
+        final brightness = _getBrightness(pixel);
         sum += brightness.toInt();
         count++;
       }
     }
     
     return count > 0 ? sum / count : 0;
+  }
+
+  /// Extrait la luminosité d'un pixel
+  static double _getBrightness(int pixel) {
+    // La bibliothèque image utilise ARGB
+    // On extrait les composantes
+    final a = (pixel >> 24) & 0xFF;
+    final r = (pixel >> 16) & 0xFF;
+    final g = (pixel >> 8) & 0xFF;
+    final b = pixel & 0xFF;
+    
+    // Luminosité perçue
+    return 0.299 * r + 0.587 * g + 0.114 * b;
   }
 
   /// Trouve le centre et le rayon d'un cercle potentiel
@@ -281,18 +265,13 @@ class ImageProcessor {
     int bestRadius = 0;
     double bestScore = 0;
     
-    // Chercher dans une petite zone autour du point de départ
     for (int y = max(0, startY - searchRadius); y <= min(image.height - 1, startY + searchRadius); y += 2) {
       for (int x = max(0, startX - searchRadius); x <= min(image.width - 1, startX + searchRadius); x += 2) {
-        // Sauter si déjà visité
-        // Tester différents rayons
-        for (int r = _minBallRadiusPx; r <= _maxBallRadiusPx; r += 3) {
-          // Vérifier que le cercle est dans l'image
+        for (int r = minBallRadiusPx; r <= maxBallRadiusPx; r += 3) {
           if (x - r < 0 || x + r >= image.width || y - r < 0 || y + r >= image.height) {
             continue;
           }
           
-          // Calculer un score de circularité
           final score = _calculateCircularityScore(image, x, y, r);
           
           if (score > bestScore) {
@@ -305,7 +284,6 @@ class ImageProcessor {
       }
     }
     
-    // Seuil minimal pour accepter un cercle
     if (bestScore > 0.5) {
       return (bestX, bestY, bestRadius);
     }
@@ -318,8 +296,10 @@ class ImageProcessor {
     int edgePoints = 0;
     int totalPoints = 0;
     
-    // Vérifier des points sur le cercle
     final pointsToCheck = 20;
+    final centerPixel = image.getPixel(centerX, centerY);
+    final centerBrightness = _getBrightness(centerPixel);
+    
     for (int i = 0; i < pointsToCheck; i++) {
       final angle = 2 * pi * i / pointsToCheck;
       final x = centerX + radius * cos(angle);
@@ -327,16 +307,7 @@ class ImageProcessor {
       
       if (x >= 0 && x < image.width && y >= 0 && y < image.height) {
         final pixel = image.getPixel(x.toInt(), y.toInt());
-        final brightness = 0.299 * img.getRed(pixel) + 
-                           0.587 * img.getGreen(pixel) + 
-                           0.114 * img.getBlue(pixel);
-        
-        // Un bord doit avoir un contraste élevé
-        // Comparer avec le centre
-        final centerPixel = image.getPixel(centerX, centerY);
-        final centerBrightness = 0.299 * img.getRed(centerPixel) + 
-                                 0.587 * img.getGreen(centerPixel) + 
-                                 0.114 * img.getBlue(centerPixel);
+        final brightness = _getBrightness(pixel);
         
         final contrast = (brightness - centerBrightness).abs();
         
@@ -376,19 +347,19 @@ class ImageProcessor {
         for (int ky = -1; ky <= 1; ky++) {
           for (int kx = -1; kx <= 1; kx++) {
             final pixel = image.getPixel(x + kx, y + ky);
-            final gray = 0.299 * img.getRed(pixel) + 
-                        0.587 * img.getGreen(pixel) + 
-                        0.114 * img.getBlue(pixel);
+            final gray = _getBrightness(pixel).toInt();
             
-            gx += gray.toInt() * sobelX[ky + 1][kx + 1];
-            gy += gray.toInt() * sobelY[ky + 1][kx + 1];
+            gx += gray * sobelX[ky + 1][kx + 1];
+            gy += gray * sobelY[ky + 1][kx + 1];
           }
         }
         
         final magnitude = sqrt(gx * gx + gy * gy).toInt();
         final edgeValue = min(255, magnitude);
         
-        edges.setPixel(x, y, img.getColor(edgeValue, edgeValue, edgeValue));
+        // Créer un pixel gris
+        final pixelValue = (edgeValue << 16) | (edgeValue << 8) | edgeValue;
+        edges.setPixel(x, y, pixelValue);
       }
     }
     
@@ -399,17 +370,13 @@ class ImageProcessor {
   static List<(int, int, int)> _findCirclesInEdges(img.Image edges, int width, int height) {
     final List<(int, int, int)> circles = [];
     
-    // Seuil pour considérer un pixel comme un bord
     final edgeThreshold = 100;
     
-    // Trouver les contours
     final contours = _findContours(edges, edgeThreshold);
     
-    // Pour chaque contour, essayer de fitter un cercle
     for (final contour in contours) {
-      if (contour.length < 10) continue; // Trop petit
+      if (contour.length < 10) continue;
       
-      // Calculer le centre de masse
       double sumX = 0;
       double sumY = 0;
       for (final point in contour) {
@@ -419,7 +386,6 @@ class ImageProcessor {
       final centerX = (sumX / contour.length).round();
       final centerY = (sumY / contour.length).round();
       
-      // Calculer le rayon moyen
       double sumR = 0;
       for (final point in contour) {
         final r = _calculateDistance(
@@ -430,8 +396,7 @@ class ImageProcessor {
       }
       final radius = (sumR / contour.length).round();
       
-      // Vérifier que le rayon est dans la plage des boules
-      if (radius >= _minBallRadiusPx && radius <= _maxBallRadiusPx) {
+      if (radius >= minBallRadiusPx && radius <= maxBallRadiusPx) {
         circles.add((centerX, centerY, radius));
       }
     }
@@ -444,9 +409,8 @@ class ImageProcessor {
     final List<List<(int, int)>> contours = [];
     final width = image.width;
     final height = image.height;
-    final visited = List.filled(height, List.filled(width, false));
+    final visited = List.generate(height, (_) => List.filled(width, false));
     
-    // Directions pour le parcours (8-voisins)
     final directions = [
       (-1, -1), (-1, 0), (-1, 1),
       (0, -1),           (0, 1),
@@ -457,12 +421,9 @@ class ImageProcessor {
       for (int x = 0; x < width; x++) {
         if (!visited[y][x]) {
           final pixel = image.getPixel(x, y);
-          final gray = 0.299 * img.getRed(pixel) + 
-                      0.587 * img.getGreen(pixel) + 
-                      0.114 * img.getBlue(pixel);
+          final gray = _getBrightness(pixel);
           
           if (gray >= threshold) {
-            // Trouver le contour
             final contour = <(int, int)>[];
             final stack = <(int, int)>[(x, y)];
             visited[y][x] = true;
@@ -477,9 +438,7 @@ class ImageProcessor {
                 
                 if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
                   final neighborPixel = image.getPixel(nx, ny);
-                  final neighborGray = 0.299 * img.getRed(neighborPixel) + 
-                                      0.587 * img.getGreen(neighborPixel) + 
-                                      0.114 * img.getBlue(neighborPixel);
+                  final neighborGray = _getBrightness(neighborPixel);
                   
                   if (neighborGray >= threshold) {
                     visited[ny][nx] = true;
@@ -505,7 +464,6 @@ class ImageProcessor {
     int edgePoints = 0;
     int totalPoints = 0;
     
-    // Vérifier des points sur la circonférence
     final pointsToCheck = 24;
     for (int i = 0; i < pointsToCheck; i++) {
       final angle = 2 * pi * i / pointsToCheck;
@@ -514,9 +472,7 @@ class ImageProcessor {
       
       if (x >= 0 && x < edges.width && y >= 0 && y < edges.height) {
         final pixel = edges.getPixel(x.toInt(), y.toInt());
-        final gray = 0.299 * img.getRed(pixel) + 
-                    0.587 * img.getGreen(pixel) + 
-                    0.114 * img.getBlue(pixel);
+        final gray = _getBrightness(pixel);
         
         if (gray >= 100) {
           edgePoints++;
@@ -525,7 +481,6 @@ class ImageProcessor {
       }
     }
     
-    // Au moins 60% des points doivent être des bords
     return totalPoints > 0 && edgePoints / totalPoints >= 0.6;
   }
 
@@ -554,13 +509,14 @@ class ImageProcessor {
 
   /// Calcule la différence de couleur entre deux pixels
   static double _colorDifference(int color1, int color2) {
-    final r1 = img.getRed(color1);
-    final g1 = img.getGreen(color1);
-    final b1 = img.getBlue(color1);
+    // Extraire les composantes ARGB
+    final r1 = (color1 >> 16) & 0xFF;
+    final g1 = (color1 >> 8) & 0xFF;
+    final b1 = color1 & 0xFF;
     
-    final r2 = img.getRed(color2);
-    final g2 = img.getGreen(color2);
-    final b2 = img.getBlue(color2);
+    final r2 = (color2 >> 16) & 0xFF;
+    final g2 = (color2 >> 8) & 0xFF;
+    final b2 = color2 & 0xFF;
     
     // Distance euclidienne dans l'espace RGB
     return sqrt(
@@ -570,12 +526,11 @@ class ImageProcessor {
 
   /// Convertit des pixels en centimètres
   static double pixelsToCm(double pixels, {double referenceDiameterPx = 50.0}) {
-    // Éviter la division par zéro
     if (referenceDiameterPx <= 0) {
       referenceDiameterPx = 50.0;
     }
     
-    final scale = _realBallDiameterCm / referenceDiameterPx;
+    final scale = realBallDiameterCm / referenceDiameterPx;
     return pixels * scale;
   }
 
@@ -585,7 +540,7 @@ class ImageProcessor {
       referenceDiameterPx = 50.0;
     }
     
-    final scale = referenceDiameterPx / _realBallDiameterCm;
+    final scale = referenceDiameterPx / realBallDiameterCm;
     return cm * scale;
   }
 }

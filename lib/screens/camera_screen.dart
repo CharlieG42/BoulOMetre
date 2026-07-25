@@ -25,9 +25,9 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isCameraReady = false;
   String? _errorMessage;
   
-  // Position du centre pour le cochonnet (peut être ajustée par l'utilisateur)
-  double _centerX = 0.5; // 50% de la largeur
-  double _centerY = 0.5; // 50% de la hauteur
+  // Position du centre pour le cochonnet
+  double _centerX = 0.5;
+  double _centerY = 0.5;
   
   // État de l'orientation
   bool _isLevel = false;
@@ -106,7 +106,6 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _captureAndProcess() async {
     if (_isProcessing || !_isCameraReady) return;
     
-    // Vérifier que le téléphone est à peu près horizontal
     if (!_isLevel) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -124,7 +123,6 @@ class _CameraScreenState extends State<CameraScreen> {
       final imageBytes = await picture.readAsBytes();
       final image = img.decodeImage(imageBytes)!;
 
-      // Calculer les coordonnées du centre en pixels
       final centerX = image.width * _centerX;
       final centerY = image.height * _centerY;
 
@@ -164,9 +162,11 @@ class _CameraScreenState extends State<CameraScreen> {
       final newMode = currentMode == FlashMode.off ? FlashMode.torch : FlashMode.off;
       await _cameraService.setFlashMode(newMode);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur flash: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur flash: $e')),
+        );
+      }
     }
   }
 
@@ -177,9 +177,11 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() => _balls = []);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur caméra: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur caméra: $e')),
+        );
+      }
     }
   }
 
@@ -241,10 +243,8 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          // Aperçu de la caméra
           CameraPreview(_cameraService.controller),
           
-          // Overlay avec détection
           CameraOverlay(
             balls: _balls,
             centerX: _centerX,
@@ -254,7 +254,6 @@ class _CameraScreenState extends State<CameraScreen> {
             roll: _roll,
           ),
           
-          // Bouton pour capturer
           Positioned(
             bottom: AppConstants.largePadding,
             left: 0,
@@ -271,7 +270,6 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
           
-          // Instructions en haut
           Positioned(
             top: AppConstants.largePadding,
             left: 0,
@@ -283,7 +281,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   vertical: AppConstants.smallPadding,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                 ),
                 child: Column(
@@ -312,7 +310,6 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ),
           
-          // Bouton pour réinitialiser le centre
           Positioned(
             bottom: AppConstants.largePadding + 80,
             right: AppConstants.defaultPadding,
@@ -320,8 +317,8 @@ class _CameraScreenState extends State<CameraScreen> {
               onPressed: _resetCenterPosition,
               backgroundColor: Colors.white.withValues(alpha: 0.9),
               foregroundColor: AppConstants.primaryColor,
-              child: const Icon(Icons.center_focus_strong, size: 24),
               heroTag: 'resetCenter',
+              child: const Icon(Icons.center_focus_strong, size: 24),
             ),
           ),
         ],

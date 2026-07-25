@@ -79,12 +79,12 @@ class _OverlayPainter extends CustomPainter {
 
   /// Dessine le repère central pour positionner le cochonnet
   void _drawCenterMarker(Canvas canvas, Size size) {
-    final markerRadius = 30.0;
-    final innerRadius = 10.0;
+    const markerRadius = 30.0;
+    const innerRadius = 10.0;
     
     // Cercle extérieur
     final outerPaint = Paint()
-      ..color = AppConstants.pigletColor.withOpacity(0.8)
+      ..color = AppConstants.pigletColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0;
     
@@ -96,7 +96,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Cercle intérieur (point central)
     final innerPaint = Paint()
-      ..color = AppConstants.pigletColor.withOpacity(0.8)
+      ..color = AppConstants.pigletColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     
     canvas.drawCircle(
@@ -107,7 +107,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Lignes de visée (croix)
     final linePaint = Paint()
-      ..color = AppConstants.pigletColor.withOpacity(0.8)
+      ..color = AppConstants.pigletColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     
@@ -156,14 +156,14 @@ class _OverlayPainter extends CustomPainter {
 
   /// Dessine l'indicateur de niveau
   void _drawLevelIndicator(Canvas canvas, Size size) {
-    final indicatorWidth = 150.0;
-    final indicatorHeight = 30.0;
+    const indicatorWidth = 150.0;
+    const indicatorHeight = 30.0;
     final indicatorX = size.width - indicatorWidth - 20;
     final indicatorY = 50.0;
     
     // Fond de l'indicateur
     final bgPaint = Paint()
-      ..color = Colors.black.withOpacity(0.6)
+      ..color = Colors.black.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
     
     final bgRect = Rect.fromLTWH(
@@ -227,13 +227,13 @@ class _OverlayPainter extends CustomPainter {
 
   /// Dessine une représentation visuelle de l'inclinaison
   void _drawInclinationVisual(Canvas canvas, Size size) {
-    final visualSize = 80.0;
+    const visualSize = 80.0;
     final visualX = size.width - visualSize - 20;
     final visualY = 100.0;
     
     // Cercle de base
     final circlePaint = Paint()
-      ..color = Colors.white.withOpacity(0.5)
+      ..color = Colors.white.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     
@@ -245,7 +245,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Ligne horizontale de référence
     final refLinePaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     
@@ -272,7 +272,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Cercle rouge montrant l'inclinaison
     final redPaint = Paint()
-      ..color = Colors.red.withOpacity(0.8)
+      ..color = Colors.red.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
     
     canvas.drawCircle(
@@ -293,7 +293,7 @@ class _OverlayPainter extends CustomPainter {
     if (piglet != null) {
       // Dessiner le cochonnet
       final pigletPaint = Paint()
-        ..color = AppConstants.pigletColor.withOpacity(0.7)
+        ..color = AppConstants.pigletColor.withValues(alpha: 0.7)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4.0;
       
@@ -304,7 +304,7 @@ class _OverlayPainter extends CustomPainter {
       );
 
       final pigletFillPaint = Paint()
-        ..color = AppConstants.pigletColor.withOpacity(0.2)
+        ..color = AppConstants.pigletColor.withValues(alpha: 0.2)
         ..style = PaintingStyle.fill;
       
       canvas.drawCircle(
@@ -353,12 +353,12 @@ class _OverlayPainter extends CustomPainter {
           : AppConstants.ballColor;
       
       final currentBallPaint = Paint()
-        ..color = currentBallColor.withOpacity(0.7)
+        ..color = currentBallColor.withValues(alpha: 0.7)
         ..style = PaintingStyle.stroke
         ..strokeWidth = isClosest ? 5.0 : 3.0;
       
       final currentBallFillPaint = Paint()
-        ..color = currentBallColor.withOpacity(0.2)
+        ..color = currentBallColor.withValues(alpha: 0.2)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(
@@ -418,7 +418,7 @@ class _OverlayPainter extends CustomPainter {
 
   // Déclarer linePaint au niveau de la classe pour qu'il soit accessible
   final linePaint = Paint()
-    ..color = Colors.white.withOpacity(0.9)
+    ..color = Colors.white.withValues(alpha: 0.9)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0;
 

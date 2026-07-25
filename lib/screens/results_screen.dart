@@ -72,7 +72,7 @@ class ResultsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(AppConstants.defaultPadding),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.flag,
                       color: AppConstants.pigletColor,
                       size: 30,
