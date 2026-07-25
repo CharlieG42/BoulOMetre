@@ -264,7 +264,7 @@ class _OverlayPainter extends CustomPainter {
     
     // Dessiner l'inclinaison
     // Convertir pitch et roll en déplacement visuel
-    final maxAngle = 15.0;
+    const maxAngle = 15.0;
     final scale = visualSize / 2 / maxAngle;
     
     final dx = roll * scale;
@@ -374,6 +374,11 @@ class _OverlayPainter extends CustomPainter {
 
       // Dessiner la ligne vers le cochonnet
       if (piglet != null) {
+        final linePaint = Paint()
+          ..color = Colors.white.withValues(alpha: 0.9)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0;
+
         canvas.drawLine(
           Offset(ball.x, ball.y),
           Offset(piglet.x, piglet.y),
@@ -384,14 +389,14 @@ class _OverlayPainter extends CustomPainter {
         final distanceCm = ball.distanceToPiglet;
         final text = Helpers.formatDistance(distanceCm);
         final textPainter = TextPainter(
-          text: const TextSpan(
+          text: TextSpan(
             text: text,
             style: TextStyle(
               color: isClosest ? AppConstants.closestBallColor : Colors.white,
               fontSize: 16,
               fontWeight: isClosest ? FontWeight.bold : FontWeight.normal,
               shadows: [
-                const Shadow(
+                Shadow(
                   blurRadius: 2,
                   color: Colors.black,
                   offset: Offset(1, 1),
@@ -415,12 +420,6 @@ class _OverlayPainter extends CustomPainter {
       }
     }
   }
-
-  // Déclarer linePaint au niveau de la classe pour qu'il soit accessible
-  final linePaint = Paint()
-    ..color = Colors.white.withValues(alpha: 0.9)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 2.0;
 
   @override
   bool shouldRepaint(covariant _OverlayPainter oldDelegate) {
