@@ -96,7 +96,7 @@ class ImageProcessor {
     
     // Scanner vers l'extérieur jusqu'à trouver un bord
     for (int r = minPigletRadiusPx; r <= maxRadius; r += 2) {
-      final pointsToCheck = 16;
+      const pointsToCheck = 16;
       int edgeCount = 0;
       
       for (int i = 0; i < pointsToCheck; i++) {
@@ -131,7 +131,7 @@ class ImageProcessor {
     final width = image.width;
     final height = image.height;
     
-    final excludeRadius = maxPigletRadiusPx * 1.5;
+    const excludeRadius = maxPigletRadiusPx * 1.5;
     
     // Convertir l'image en niveaux de gris
     final grayscale = img.grayscale(image);
@@ -192,7 +192,7 @@ class ImageProcessor {
     final width = image.width;
     final height = image.height;
     
-    final cellSize = 40;
+    const cellSize = 40;
     final visited = List.generate(height, (_) => List.filled(width, false));
     
     for (int y = 0; y < height; y += cellSize ~/ 2) {
@@ -252,11 +252,12 @@ class ImageProcessor {
   }
 
   /// Extrait la luminosité d'un pixel
-  static double _getBrightness(int pixel) {
-    // Extraire les composantes ARGB d'un int
-    final r = (pixel >> 16) & 0xFF;
-    final g = (pixel >> 8) & 0xFF;
-    final b = pixel & 0xFF;
+  static double _getBrightness(img.Pixel pixel) {
+    // Avec le package image v4+, getPixel() renvoie un objet Pixel
+    // dont les composantes r/g/b sont directement accessibles.
+    final r = pixel.r;
+    final g = pixel.g;
+    final b = pixel.b;
     
     // Luminosité perçue (formule standard)
     return 0.299 * r + 0.587 * g + 0.114 * b;
@@ -300,7 +301,7 @@ class ImageProcessor {
     int edgePoints = 0;
     int totalPoints = 0;
     
-    final pointsToCheck = 20;
+    const pointsToCheck = 20;
     final centerPixel = image.getPixel(centerX, centerY);
     final centerBrightness = _getBrightness(centerPixel);
     
@@ -361,9 +362,9 @@ class ImageProcessor {
         final magnitude = sqrt(gx * gx + gy * gy).toInt();
         final edgeValue = min(255, magnitude);
         
-        // Créer un pixel gris (ARGB: 0xAARRGGBB)
-        final pixelValue = (0xFF << 24) | (edgeValue << 16) | (edgeValue << 8) | edgeValue;
-        edges.setPixel(x, y, pixelValue);
+        // Créer un pixel gris. setPixel() attend un Color (ou un Pixel) et
+        // non plus un int packé comme avant : on utilise setPixelRgba.
+        edges.setPixelRgba(x, y, edgeValue, edgeValue, edgeValue, 255);
       }
     }
     
@@ -374,7 +375,7 @@ class ImageProcessor {
   static List<(int, int, int)> _findCirclesInEdges(img.Image edges, int width, int height) {
     final List<(int, int, int)> circles = [];
     
-    final edgeThreshold = 100;
+    const edgeThreshold = 100;
     
     final contours = _findContours(edges, edgeThreshold);
     
@@ -468,7 +469,7 @@ class ImageProcessor {
     int edgePoints = 0;
     int totalPoints = 0;
     
-    final pointsToCheck = 24;
+    const pointsToCheck = 24;
     for (int i = 0; i < pointsToCheck; i++) {
       final angle = 2 * pi * i / pointsToCheck;
       final x = centerX + radius * cos(angle);
