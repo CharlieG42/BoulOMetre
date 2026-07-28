@@ -27,12 +27,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create Flutter project with correct package name
+      - name: Create Flutter project with exact name
         run: |
           cd /tmp
-          flutter create --org com.example --platforms android boulometre_temp
-          cp -r boulometre_temp/android /home/runner/work/BoulOMetre/BoulOMetre/
-          rm -rf boulometre_temp
+          flutter create --org com.example --platforms android boulometre
+          cp -r boulometre/android /home/runner/work/BoulOMetre/BoulOMetre/
+          rm -rf boulometre
+
+      - name: Fix package name in Android files
+        run: |
+          cd /home/runner/work/BoulOMetre/BoulOMetre
+          # Replace package name in all files
+          find android -type f \( -name "*.xml" -o -name "*.gradle" -o -name "*.kt" -o -name "*.java" \) \
+            -exec sed -i 's/com\.example\.boulometre/com.example.boul_o_metre/g' {} + || true
 
       - name: Install dependencies
         run: flutter pub get
