@@ -1,0 +1,49 @@
+group 'com.example.boulometre'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.example.boulometre'
+    compileSdkVersion 34
+    
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+    
+    defaultConfig {
+        applicationId "com.example.boulometre"
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName '1.0'
+    }
+    
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
