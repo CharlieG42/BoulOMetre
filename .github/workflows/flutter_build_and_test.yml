@@ -27,11 +27,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create Android directory structure
+      - name: Create temporary Flutter project for Android files
         run: |
-          mkdir -p android/app/src/main/res
-          touch android/local.properties
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          cd /tmp
+          flutter create --platforms android temp_flutter_project
+          cp -r temp_flutter_project/android /home/runner/work/BoulOMetre/BoulOMetre/
+          rm -rf temp_flutter_project
 
       - name: Install dependencies
         run: flutter pub get
@@ -46,7 +47,7 @@ jobs:
         run: flutter build apk --release || true
 
       - name: List build output (debug)
-        run: find build -name "*.apk" -type f
+        run: find . -name "*.apk" -type f || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
