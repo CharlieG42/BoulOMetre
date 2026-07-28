@@ -27,12 +27,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create temporary Flutter project for Android files
+      - name: Create Flutter project with correct package name
         run: |
           cd /tmp
-          flutter create --platforms android temp_flutter_project
-          cp -r temp_flutter_project/android /home/runner/work/BoulOMetre/BoulOMetre/
-          rm -rf temp_flutter_project
+          flutter create --org com.example --platforms android boulometre_temp
+          cp -r boulometre_temp/android /home/runner/work/BoulOMetre/BoulOMetre/
+          rm -rf boulometre_temp
 
       - name: Install dependencies
         run: flutter pub get
