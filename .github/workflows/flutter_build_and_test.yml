@@ -27,6 +27,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Create Flutter Android project structure
+        run: flutter create --platforms android .
+
       - name: Install dependencies
         run: flutter pub get
 
