@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
 import 'package:boul_o_metre/services/camera_service.dart';
 import 'package:boul_o_metre/services/image_processor.dart';
+import 'package:boul_o_metre/services/orientation_service.dart';
 import 'package:boul_o_metre/widgets/camera_overlay.dart';
 import 'package:boul_o_metre/models/ball.dart';
 import 'package:boul_o_metre/app/routes.dart';
@@ -17,6 +18,7 @@ class CameraScreen extends StatefulWidget {
 
 class _CameraScreenState extends State<CameraScreen> {
   final CameraService _cameraService = CameraService();
+  final OrientationService _orientationService = OrientationService();
   List<Ball> _balls = [];
   bool _isProcessing = false;
   bool _isCameraReady = false;
@@ -26,11 +28,13 @@ class _CameraScreenState extends State<CameraScreen> {
   void initState() {
     super.initState();
     _initializeCamera();
+    _orientationService.start();
   }
 
   @override
   void dispose() {
     _cameraService.dispose();
+    _orientationService.dispose();
     super.dispose();
   }
 
@@ -55,6 +59,18 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _captureAndProcess() async {
     if (_isProcessing || !_isCameraReady) return;
+    
+    // Vérifier si le téléphone est horizontal
+    if (!_orientationService.isHorizontal) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez tenir le téléphone à l\'horizontal pour prendre une photo'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
     setState(() => _isProcessing = true);
 
     try {
