@@ -43,8 +43,10 @@ class _CameraOverlayState extends State<CameraOverlay> {
     accelerometerEvents.listen((AccelerometerEvent event) {
       if (!mounted) return;
       setState(() {
-        _devicePitch = event.pitch;
-        _deviceRoll = event.roll;
+        // Use x and y as approximation for roll and pitch
+        // For a simple level indicator, we can use x for roll and y for pitch
+        _deviceRoll = event.x;
+        _devicePitch = event.y;
       });
     });
   }
