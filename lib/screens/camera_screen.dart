@@ -23,6 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
   String? _errorMessage;
   bool _showMeasurementGuides = false;
   Offset? _manualPigletPosition;
+  Uint8List? _capturedImageBytes;
 
   @override
   void initState() {
@@ -63,6 +64,9 @@ class _CameraScreenState extends State<CameraScreen> {
       final picture = await _cameraService.takePicture();
       final imageBytes = await picture.readAsBytes();
       final image = img.decodeImage(imageBytes)!;
+
+      // Store captured image for display
+      _capturedImageBytes = imageBytes;
 
       // Get the piglet at center (will be adjusted manually if needed)
       final balls = ImageProcessor.detectBallsAndPiglet(image);
@@ -115,6 +119,7 @@ class _CameraScreenState extends State<CameraScreen> {
       _showMeasurementGuides = false;
       _balls = [];
       _manualPigletPosition = null;
+      _capturedImageBytes = null;
     });
   }
 
@@ -211,7 +216,16 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          CameraPreview(_cameraService.controller),
+          // Show captured image when in measurement mode, otherwise show camera preview
+          if (_showMeasurementGuides && _capturedImageBytes != null)
+            Positioned.fill(
+              child: Image.memory(
+                _capturedImageBytes!,
+                fit: BoxFit.cover,
+              ),
+            ),
+          if (!_showMeasurementGuides)
+            CameraPreview(_cameraService.controller),
           CameraOverlay(
             balls: _balls,
             showMeasurementGuides: _showMeasurementGuides,
