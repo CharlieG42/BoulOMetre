@@ -30,16 +30,9 @@ jobs:
       - name: Create Flutter project with exact name
         run: |
           cd /tmp
-          flutter create --org com.example --platforms android boulometre
-          cp -r boulometre/android /home/runner/work/BoulOMetre/BoulOMetre/
-          rm -rf boulometre
-
-      - name: Fix package name in Android files
-        run: |
-          cd /home/runner/work/BoulOMetre/BoulOMetre
-          # Replace package name in all files
-          find android -type f \( -name "*.xml" -o -name "*.gradle" -o -name "*.kt" -o -name "*.java" \) \
-            -exec sed -i 's/com\.example\.boulometre/com.example.boul_o_metre/g' {} + || true
+          flutter create --org com.example --platforms android boul_o_metre
+          cp -r boul_o_metre/android /home/runner/work/BoulOMetre/BoulOMetre/
+          rm -rf boul_o_metre
 
       - name: Install dependencies
         run: flutter pub get
@@ -51,10 +44,10 @@ jobs:
         run: flutter test || true
 
       - name: Build APK (Release)
-        run: flutter build apk --release || true
+        run: flutter build apk --release
 
       - name: List build output (debug)
-        run: find . -name "*.apk" -type f || true
+        run: find . -name "*.apk" -type f
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
