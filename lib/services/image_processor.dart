@@ -39,15 +39,15 @@ class ImageProcessor {
     }
     
     // Sort circles by radius (smallest first - likely piglet)
-    circles.sort((a, b) => a['radius'].compareTo(b['radius']));
+    circles.sort((a, b) => (a['radius'] ?? 0).compareTo(b['radius'] ?? 0));
     
     // The smallest circle is likely the piglet
     final pigletCircle = circles.first;
     final piglet = Ball(
       id: 'piglet',
-      x: pigletCircle['x']! / scaleFactor,
-      y: pigletCircle['y']! / scaleFactor,
-      radius: pigletCircle['radius']! / scaleFactor,
+      x: (pigletCircle['x'] ?? 0) / scaleFactor,
+      y: (pigletCircle['y'] ?? 0) / scaleFactor,
+      radius: (pigletCircle['radius'] ?? 0) / scaleFactor,
       isPiglet: true,
     );
     detectedObjects.add(piglet);
@@ -58,7 +58,7 @@ class ImageProcessor {
       final circle = ballCircles[i];
       final distance = _calculateDistance(
         piglet.x, piglet.y,
-        circle['x']! / scaleFactor, circle['y']! / scaleFactor,
+        (circle['x'] ?? 0) / scaleFactor, (circle['y'] ?? 0) / scaleFactor,
       );
       
       // Use piglet diameter as reference for scale
@@ -67,9 +67,9 @@ class ImageProcessor {
       
       detectedObjects.add(Ball(
         id: 'ball_${i + 1}',
-        x: circle['x']! / scaleFactor,
-        y: circle['y']! / scaleFactor,
-        radius: circle['radius']! / scaleFactor,
+        x: (circle['x'] ?? 0) / scaleFactor,
+        y: (circle['y'] ?? 0) / scaleFactor,
+        radius: (circle['radius'] ?? 0) / scaleFactor,
         distanceToPiglet: distanceCm,
         isPiglet: false,
       ));
@@ -86,14 +86,22 @@ class ImageProcessor {
     for (int y = 1; y < height - 1; y++) {
       for (int x = 1; x < width - 1; x++) {
         // Sobel operator - optimized
-        final p11 = img.getRed(grayscale.getPixel(x - 1, y - 1));
-        final p12 = img.getRed(grayscale.getPixel(x, y - 1));
-        final p13 = img.getRed(grayscale.getPixel(x + 1, y - 1));
-        final p21 = img.getRed(grayscale.getPixel(x - 1, y));
-        final p23 = img.getRed(grayscale.getPixel(x + 1, y));
-        final p31 = img.getRed(grayscale.getPixel(x - 1, y + 1));
-        final p32 = img.getRed(grayscale.getPixel(x, y + 1));
-        final p33 = img.getRed(grayscale.getPixel(x + 1, y + 1));
+        // In the image package, pixels are stored as int with ARGB format
+        // For grayscale images, we can use getLuminance or just the red channel
+        final getPixelValue = (int px, int py) {
+          final pixel = grayscale.getPixel(px, py);
+          // For grayscale, all channels are the same
+          return img.getRed(pixel);
+        };
+        
+        final p11 = getPixelValue(x - 1, y - 1);
+        final p12 = getPixelValue(x, y - 1);
+        final p13 = getPixelValue(x + 1, y - 1);
+        final p21 = getPixelValue(x - 1, y);
+        final p23 = getPixelValue(x + 1, y);
+        final p31 = getPixelValue(x - 1, y + 1);
+        final p32 = getPixelValue(x, y + 1);
+        final p33 = getPixelValue(x + 1, y + 1);
         
         final gx = p13 + 2 * p23 + p33 - p11 - 2 * p21 - p31;
         final gy = p31 + 2 * p32 + p33 - p11 - 2 * p12 - p13;
@@ -117,7 +125,8 @@ class ImageProcessor {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final pixel = edges.getPixel(x, y);
-        final r = img.getRed(pixel);
+        // For grayscale/edge images, check the red channel (all are same)
+        final r = pixel.r;
         if (r > 200) {
           edgePoints.add({'x': x, 'y': y});
         }
@@ -175,16 +184,16 @@ class ImageProcessor {
     }
     
     // Sort by votes (descending)
-    candidates.sort((a, b) => b['votes']!.compareTo(a['votes']!));
+    candidates.sort((a, b) => (b['votes'] ?? 0).compareTo(a['votes'] ?? 0));
     
     // Filter to keep only the best candidates, removing duplicates
     final result = <Map<String, int>>[];
     for (final candidate in candidates) {
       bool isDuplicate = false;
       for (final existing in result) {
-        final dx = candidate['x']! - existing['x']!;
-        final dy = candidate['y']! - existing['y']!;
-        final dr = candidate['radius']! - existing['radius']!;
+        final dx = (candidate['x'] ?? 0) - (existing['x'] ?? 0);
+        final dy = (candidate['y'] ?? 0) - (existing['y'] ?? 0);
+        final dr = (candidate['radius'] ?? 0) - (existing['radius'] ?? 0);
         if (dx * dx + dy * dy + dr * dr < 400) {
           isDuplicate = true;
           break;
