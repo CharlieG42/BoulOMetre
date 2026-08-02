@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:boul_o_metre/models/ball.dart';
 import 'package:boul_o_metre/utils/constants.dart';
