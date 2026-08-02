@@ -21,6 +21,8 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isProcessing = false;
   bool _isCameraReady = false;
   String? _errorMessage;
+  bool _showMeasurementGuides = false;
+  Offset? _manualPigletPosition;
 
   @override
   void initState() {
@@ -62,23 +64,28 @@ class _CameraScreenState extends State<CameraScreen> {
       final imageBytes = await picture.readAsBytes();
       final image = img.decodeImage(imageBytes)!;
 
+      // Get the piglet at center (will be adjusted manually if needed)
       final balls = ImageProcessor.detectBallsAndPiglet(image);
-      if (mounted) {
-        setState(() => _balls = balls);
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) {
-          // Reset balls overlay before navigating
-          setState(() => _balls = []);
-          Navigator.pushNamed(
-            context,
-            Routes.results,
-            arguments: balls,
+      
+      // If user has manually adjusted the piglet position, update it
+      final updatedBalls = balls.map((ball) {
+        if (ball.isPiglet && _manualPigletPosition != null) {
+          return ball.copyWith(
+            x: _manualPigletPosition!.dx,
+            y: _manualPigletPosition!.dy,
           );
         }
+        return ball;
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _balls = updatedBalls;
+          _showMeasurementGuides = true; // Show guides after capture
+        });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _balls = []);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur: ' + e.toString())),
         );
@@ -88,6 +95,33 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() => _isProcessing = false);
       }
     }
+  }
+
+  void _confirmMeasurement() {
+    if (_balls.isEmpty) return;
+    
+    // Hide guides and navigate to results
+    setState(() => _showMeasurementGuides = false);
+    
+    Navigator.pushNamed(
+      context,
+      Routes.results,
+      arguments: _balls,
+    );
+  }
+
+  void _cancelMeasurement() {
+    setState(() {
+      _showMeasurementGuides = false;
+      _balls = [];
+      _manualPigletPosition = null;
+    });
+  }
+
+  void _handlePigletPositionChanged(Offset position) {
+    setState(() {
+      _manualPigletPosition = position;
+    });
   }
 
   Future<void> _toggleFlash() async {
@@ -106,7 +140,11 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       await _cameraService.switchCamera();
       if (mounted) {
-        setState(() => _balls = []);
+        setState(() {
+          _balls = [];
+          _showMeasurementGuides = false;
+          _manualPigletPosition = null;
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -174,22 +212,12 @@ class _CameraScreenState extends State<CameraScreen> {
       body: Stack(
         children: [
           CameraPreview(_cameraService.controller),
-          CameraOverlay(balls: _balls),
-          Positioned(
-            bottom: AppConstants.largePadding,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: FloatingActionButton(
-                onPressed: _captureAndProcess,
-                backgroundColor: AppConstants.primaryColor,
-                foregroundColor: Colors.white,
-                child: _isProcessing
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Icon(Icons.camera, size: 30),
-              ),
-            ),
+          CameraOverlay(
+            balls: _balls,
+            showMeasurementGuides: _showMeasurementGuides,
+            onPigletPositionChanged: _showMeasurementGuides ? _handlePigletPositionChanged : null,
           ),
+          // Instruction text at top
           Positioned(
             top: AppConstants.largePadding,
             left: 0,
@@ -204,15 +232,58 @@ class _CameraScreenState extends State<CameraScreen> {
                   color: Colors.black.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                 ),
-                child: const Text(
-                  'Pointez la camera vers les boules et le cochonnet',
-                  style: TextStyle(
+                child: Text(
+                  _showMeasurementGuides
+                      ? 'Ajustez le pointeur sur le cochonnet et validez'
+                      : 'Pointez la camera vers les boules et le cochonnet',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
+            ),
+          ),
+          // Camera button at bottom
+          Positioned(
+            bottom: AppConstants.largePadding,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: _showMeasurementGuides
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _cancelMeasurement,
+                          icon: const Icon(Icons.cancel),
+                          label: const Text('Annuler'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton.icon(
+                          onPressed: _confirmMeasurement,
+                          icon: const Icon(Icons.check),
+                          label: const Text('Valider'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.primaryColor,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    )
+                  : FloatingActionButton(
+                      onPressed: _captureAndProcess,
+                      backgroundColor: AppConstants.primaryColor,
+                      foregroundColor: Colors.white,
+                      child: _isProcessing
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Icon(Icons.camera, size: 30),
+                    ),
             ),
           ),
         ],
