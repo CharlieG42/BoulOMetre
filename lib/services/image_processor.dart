@@ -87,11 +87,11 @@ class ImageProcessor {
       for (int x = 1; x < width - 1; x++) {
         // Sobel operator - optimized
         // In the image package, pixels are stored as int with ARGB format
-        // For grayscale images, we can use getLuminance or just the red channel
+        // For grayscale images, we can use the red channel directly
         final getPixelValue = (int px, int py) {
           final pixel = grayscale.getPixel(px, py);
-          // For grayscale, all channels are the same
-          return img.getRed(pixel);
+          // For grayscale, all channels are the same - use .r property
+          return pixel.r;
         };
         
         final p11 = getPixelValue(x - 1, y - 1);
