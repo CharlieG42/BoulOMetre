@@ -11,7 +11,9 @@ class ResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final piglet = balls.where((ball) => ball.isPiglet).firstOrNull;
+    final piglet = balls.where((ball) => ball.isPiglet).isNotEmpty
+        ? balls.where((ball) => ball.isPiglet).first
+        : null;
     
     if (piglet == null) {
       return Scaffold(

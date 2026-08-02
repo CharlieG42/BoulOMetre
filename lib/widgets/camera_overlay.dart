@@ -270,8 +270,8 @@ class _OverlayPainter extends CustomPainter {
   }
 
   void _drawDetectedBalls(Canvas canvas, List<Ball> balls, Offset pigletPosition) {
-    final piglet = balls.firstWhere((ball) => ball.isPiglet, orElse: () => null);
-    if (piglet == null) return;
+    if (balls.isEmpty || !balls.any((ball) => ball.isPiglet)) return;
+    final piglet = balls.firstWhere((ball) => ball.isPiglet);
 
     // Draw piglet
     final pigletPaint = Paint()

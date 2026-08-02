@@ -20,7 +20,7 @@ class CameraService {
       }
       final firstCamera = cameras.firstWhere(
         (camera) => camera.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
+        orElse: () => cameras.isNotEmpty ? cameras.first : throw Exception('No cameras found'),
       );
 
       _controller = CameraController(
