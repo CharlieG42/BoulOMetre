@@ -25,7 +25,7 @@ class _OverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final piglet = balls.where((ball) => ball.isPiglet).firstOrNull;
-    if (piglet == null) return;
+    if (piglet == null || balls.isEmpty) return;
 
     final pigletPaint = Paint()
       ..color = AppConstants.pigletColor.withOpacity(0.7)

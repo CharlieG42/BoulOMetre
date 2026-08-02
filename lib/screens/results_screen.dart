@@ -18,11 +18,41 @@ class ResultsScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Resultats'),
         ),
-        body: const Center(
-          child: Text(
-            'Aucun cochonnet detecte. Veuillez reessayer.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: AppConstants.pigletColor,
+                  size: 64,
+                ),
+                const SizedBox(height: AppConstants.smallPadding),
+                const Text(
+                  'Aucun cochonnet detecte',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppConstants.smallPadding),
+                const Text(
+                  'Assurez-vous que le cochonnet est visible et bien eclaire. ',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: AppConstants.defaultPadding),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Reessayer'),
+                ),
+              ],
+            ),
           ),
         ),
       );

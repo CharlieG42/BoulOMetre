@@ -67,6 +67,8 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() => _balls = balls);
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
+          // Reset balls overlay before navigating
+          setState(() => _balls = []);
           Navigator.pushNamed(
             context,
             Routes.results,
@@ -76,6 +78,7 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _balls = []);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur: ' + e.toString())),
         );
