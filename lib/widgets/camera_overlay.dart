@@ -246,7 +246,21 @@ class _OverlayPainter extends CustomPainter {
   }
 
   void _drawMeasurementGuides(Canvas canvas, Offset center, Size size) {
-    // Draw concentric circles with alternating stroke widths
+    final maxRadius = min(size.width, size.height) * 0.4;
+    final numCircles = 5;
+
+    // 1. Dessiner les 2 cercles principaux (plus épais et visibles)
+    final mainCirclePaint = Paint()
+      ..color = Colors.white.withOpacity(0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0;
+
+    // Cercle principal intérieur (à 25% du rayon max)
+    canvas.drawCircle(center, maxRadius * 0.25, mainCirclePaint);
+    // Cercle principal extérieur (à 75% du rayon max)
+    canvas.drawCircle(center, maxRadius * 0.75, mainCirclePaint);
+
+    // 2. Dessiner les cercles intermédiaires existants (5 cercles)
     final circlePaintThick = Paint()
       ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.stroke
@@ -257,16 +271,30 @@ class _OverlayPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
-    final maxRadius = min(size.width, size.height) * 0.4;
-    final numCircles = 5;
-
     for (int i = 1; i <= numCircles; i++) {
       final radius = (maxRadius * i) / numCircles;
       final paint = i % 2 == 0 ? circlePaintThick : circlePaintThin;
       canvas.drawCircle(center, radius, paint);
     }
 
-    // Draw radial lines for better orientation
+    // 3. Dessiner des cercles en pointillés ENTRE chaque cercle existant
+    final dashedPaint = Paint()
+      ..color = Colors.white.withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+
+    // Dessiner des pointillés entre chaque cercle
+    for (int i = 1; i < numCircles; i++) {
+      final innerRadius = (maxRadius * i) / numCircles;
+      final outerRadius = (maxRadius * (i + 1)) / numCircles;
+      final midRadius = (innerRadius + outerRadius) / 2;
+
+      // Dessiner un cercle en pointillés
+      _drawDashedCircle(canvas, center, midRadius, dashedPaint);
+    }
+
+    // 4. Dessiner les lignes radiales pour une meilleure orientation
     final linePaint = Paint()
       ..color = Colors.white.withOpacity(0.6)
       ..style = PaintingStyle.stroke
@@ -279,6 +307,25 @@ class _OverlayPainter extends CustomPainter {
       final x2 = center.dx + cos(rad) * maxRadius;
       final y2 = center.dy + sin(rad) * maxRadius;
       canvas.drawLine(Offset(x1, y1), Offset(x2, y2), linePaint);
+    }
+  }
+
+  void _drawDashedCircle(Canvas canvas, Offset center, double radius, Paint paint) {
+    const dashWidth = 5.0;
+    const dashSpace = 5.0;
+    final circumference = 2 * pi * radius;
+    final dashCount = (circumference / (dashWidth + dashSpace)).floor();
+
+    for (int i = 0; i < dashCount; i++) {
+      final angle1 = (i * (dashWidth + dashSpace)) / circumference * 2 * pi;
+      final angle2 = ((i + 1) * dashWidth + i * dashSpace) / circumference * 2 * pi;
+
+      final x1 = center.dx + cos(angle1) * radius;
+      final y1 = center.dy + sin(angle1) * radius;
+      final x2 = center.dx + cos(angle2) * radius;
+      final y2 = center.dy + sin(angle2) * radius;
+
+      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
     }
   }
 
