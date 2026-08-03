@@ -25,6 +25,7 @@ class _CameraOverlayState extends State<CameraOverlay> {
   double _deviceRoll = 0.0;
   bool _isListening = false;
   Offset? _manualPigletPosition;
+  Offset? _dragStartPosition;  // Pour suivre le début du glissement
 
   @override
   void initState() {
@@ -80,15 +81,24 @@ class _CameraOverlayState extends State<CameraOverlay> {
             if (widget.onPigletPositionChanged != null)
               GestureDetector(
                 onPanDown: (details) {
-                  setState(() {
-                    _manualPigletPosition = details.localPosition;
-                  });
-                  widget.onPigletPositionChanged!(_manualPigletPosition!);
+                  // Stocker la position de départ - NE PAS déplacer le pointeur
+                  // Cela évite que le pointeur ne se cache sous le doigt
+                  _dragStartPosition = details.localPosition;
                 },
                 onPanUpdate: (details) {
+                  // Calculer le déplacement relatif par rapport au point de départ
+                  final offset = details.localPosition - _dragStartPosition!;
+                  
+                  // Appliquer ce déplacement à la position ACTUELLE du pointeur
+                  // (ou au centre si _manualPigletPosition est null)
+                  final currentPosition = _manualPigletPosition ?? center;
                   setState(() {
-                    _manualPigletPosition = details.localPosition;
+                    _manualPigletPosition = currentPosition + offset;
                   });
+                  
+                  // Mettre à jour la position de départ pour le prochain événement
+                  _dragStartPosition = details.localPosition;
+                  
                   widget.onPigletPositionChanged!(_manualPigletPosition!);
                 },
                 behavior: HitTestBehavior.translucent,
