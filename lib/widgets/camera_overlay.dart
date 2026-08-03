@@ -305,8 +305,6 @@ class _OverlayPainter extends CustomPainter {
         canvas.drawCircle(center, radius, solidPaint);
       }
     }
-      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), linePaint);
-    }
   }
 
   void _drawDashedCircle(Canvas canvas, Offset center, double radius, Paint paint) {
