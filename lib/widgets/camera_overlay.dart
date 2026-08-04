@@ -394,7 +394,7 @@ class _OverlayPainter extends CustomPainter {
       canvas.drawCircle(Offset(ball.x, ball.y), ball.radius, ballPaint);
 
       // Draw rank number inside the ball
-      if (rank > 0) {
+      if (rank != null && rank > 0) {
         final textPainter = TextPainter(
           text: TextSpan(
             text: rank.toString(),
