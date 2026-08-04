@@ -7,7 +7,9 @@ import 'package:sensors_plus/sensors_plus.dart';
 class CameraOverlay extends StatefulWidget {
   final List<Ball> balls;
   final bool showMeasurementGuides;
+  final bool isSelectingBalls;
   final Function(Offset)? onPigletPositionChanged;
+  final Function(Offset)? onBallAdded;
   final Function(bool)? onHorizontalChanged;
   final double horizontalThreshold;
 
@@ -15,7 +17,9 @@ class CameraOverlay extends StatefulWidget {
     super.key,
     required this.balls,
     this.showMeasurementGuides = false,
+    this.isSelectingBalls = false,
     this.onPigletPositionChanged,
+    this.onBallAdded,
     this.onHorizontalChanged,
     this.horizontalThreshold = 0.1,
   });
@@ -93,8 +97,16 @@ class _CameraOverlayState extends State<CameraOverlay> {
                 balls: widget.balls,
               ),
             ),
-            // Touch handler for manual piglet adjustment
-            if (widget.onPigletPositionChanged != null)
+            // Touch handler for piglet adjustment or ball selection
+            if (widget.isSelectingBalls && widget.onBallAdded != null)
+              GestureDetector(
+                onTapDown: (details) {
+                  // En mode sélection des boules, ajouter une boule au clic
+                  widget.onBallAdded!(details.localPosition);
+                },
+                behavior: HitTestBehavior.translucent,
+              ),
+            if (!widget.isSelectingBalls && widget.onPigletPositionChanged != null)
               GestureDetector(
                 onPanDown: (details) {
                   // Stocker la position de départ - NE PAS déplacer le pointeur
@@ -358,18 +370,52 @@ class _OverlayPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(piglet.x, piglet.y), piglet.radius, pigletFillPaint);
 
-    // Draw balls
-    final ballPaint = Paint()
-      ..color = AppConstants.ballColor.withOpacity(0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-
+    // Draw balls with their rank
     for (final ball in balls.where((ball) => !ball.isPiglet)) {
+      // Extract rank from ID (e.g., "Boule 1" -> rank 1)
+      final rankMatch = RegExp(r'(\d+)$').firstMatch(ball.id);
+      final rank = rankMatch != null ? int.tryParse(rankMatch.group(1)!) : 0;
+      
+      // Color based on rank (1 = green, 2 = yellow, 3+ = blue)
+      Color ballColor;
+      if (rank == 1) {
+        ballColor = Colors.green.withOpacity(0.9);
+      } else if (rank == 2) {
+        ballColor = Colors.yellow.withOpacity(0.9);
+      } else {
+        ballColor = AppConstants.ballColor.withOpacity(0.7);
+      }
+      
+      final ballPaint = Paint()
+        ..color = ballColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+      
       canvas.drawCircle(Offset(ball.x, ball.y), ball.radius, ballPaint);
+
+      // Draw rank number inside the ball
+      if (rank > 0) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: rank.toString(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout();
+        textPainter.paint(
+          canvas,
+          Offset(ball.x - textPainter.width / 2, ball.y - textPainter.height / 2),
+        );
+      }
 
       // Draw line to piglet
       final linePaint = Paint()
-        ..color = Colors.white.withOpacity(0.9)
+        ..color = ballColor.withOpacity(0.6)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
       canvas.drawLine(

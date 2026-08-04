@@ -23,6 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isCameraReady = false;
   String? _errorMessage;
   bool _showMeasurementGuides = false;
+  bool _isSelectingBalls = false;
   Offset? _manualPigletPosition;
   Uint8List? _capturedImageBytes;
   bool _isHorizontal = false;
@@ -88,6 +89,7 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() {
           _balls = updatedBalls;
           _showMeasurementGuides = true; // Show guides after capture
+          _manualPigletPosition = null; // Reset for next capture
         });
       }
     } catch (e) {
@@ -106,19 +108,73 @@ class _CameraScreenState extends State<CameraScreen> {
   void _confirmMeasurement() {
     if (_balls.isEmpty) return;
     
-    // Hide guides and navigate to results
-    setState(() => _showMeasurementGuides = false);
+    // Passer en mode sélection des boules
+    setState(() {
+      _showMeasurementGuides = false;
+      _isSelectingBalls = true;
+    });
+  }
+
+  void _addBallAtPosition(Offset position) {
+    if (!_isSelectingBalls) return;
+    
+    // Créer une nouvelle boule à la position cliquée
+    final newBall = Ball(
+      id: 'ball_${_balls.length + 1}',
+      x: position.dx,
+      y: position.dy,
+      radius: 20.0,  // Rayon par défaut pour les boules
+      isPiglet: false,
+    );
+    
+    setState(() {
+      _balls.add(newBall);
+    });
+  }
+
+  void _finishBallSelection() {
+    if (_balls.isEmpty) return;
+    
+    // Calculer les distances par rapport au cochonnet
+    final piglet = _balls.firstWhere((ball) => ball.isPiglet);
+    final updatedBalls = _balls.map((ball) {
+      if (!ball.isPiglet) {
+        final distance = ImageProcessor.calculateDistance(
+          ball.x, ball.y, piglet.x, piglet.y
+        );
+        return ball.copyWith(distanceToPiglet: distance);
+      }
+      return ball;
+    }).toList();
+    
+    // Trier les boules par distance (du plus proche au plus éloigné)
+    final sortedBalls = [...updatedBalls.where((ball) => !ball.isPiglet)]
+      ..sort((a, b) => a.distanceToPiglet.compareTo(b.distanceToPiglet));
+    
+    // Attribuer les rangs (1 = plus proche)
+    final rankedBalls = updatedBalls.map((ball) {
+      if (ball.isPiglet) return ball;
+      final rank = sortedBalls.indexOf(ball) + 1;
+      return ball.copyWith(id: 'Boule $rank');
+    }).toList();
+    
+    // Naviguer vers les résultats
+    setState(() {
+      _isSelectingBalls = false;
+      _balls = rankedBalls;
+    });
     
     Navigator.pushNamed(
       context,
       Routes.results,
-      arguments: _balls,
+      arguments: rankedBalls,
     );
   }
 
   void _cancelMeasurement() {
     setState(() {
       _showMeasurementGuides = false;
+      _isSelectingBalls = false;
       _balls = [];
       _manualPigletPosition = null;
       _capturedImageBytes = null;
@@ -231,7 +287,9 @@ class _CameraScreenState extends State<CameraScreen> {
           CameraOverlay(
             balls: _balls,
             showMeasurementGuides: _showMeasurementGuides,
+            isSelectingBalls: _isSelectingBalls,
             onPigletPositionChanged: _showMeasurementGuides ? _handlePigletPositionChanged : null,
+            onBallAdded: _isSelectingBalls ? _addBallAtPosition : null,
             onHorizontalChanged: (isHorizontal) {
               setState(() {
                 _isHorizontal = isHorizontal;
@@ -255,9 +313,11 @@ class _CameraScreenState extends State<CameraScreen> {
                   borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                 ),
                 child: Text(
-                  _showMeasurementGuides
-                      ? 'Ajustez le pointeur sur le cochonnet et validez'
-                      : 'Pointez la camera vers les boules et le cochonnet',
+                  _isSelectingBalls
+                      ? 'Cliquez sur chaque boule (${_balls.where((b) => !b.isPiglet).length})'
+                      : _showMeasurementGuides
+                          ? 'Ajustez le pointeur sur le cochonnet et validez'
+                          : 'Pointez la camera vers les boules et le cochonnet',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -328,18 +388,50 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                       ],
                     )
-                  : FloatingActionButton(
-                      onPressed: _isProcessing || !_isCameraReady || !_isHorizontal
-                          ? null
-                          : _captureAndProcess,
-                      backgroundColor: _isHorizontal
-                          ? AppConstants.primaryColor
-                          : Colors.grey,
-                      foregroundColor: Colors.white,
-                      child: _isProcessing
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Icon(Icons.camera, size: 30),
-                    ),
+                  : _isSelectingBalls
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _isSelectingBalls = false;
+                                  _balls = _balls.where((ball) => ball.isPiglet).toList();
+                                });
+                              },
+                              icon: const Icon(Icons.cancel),
+                              label: const Text('Annuler'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            ElevatedButton.icon(
+                              onPressed: _balls.length > 1 ? _finishBallSelection : null,
+                              icon: const Icon(Icons.check),
+                              label: Text('Terminer (${_balls.where((b) => !b.isPiglet).length})'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _balls.where((b) => !b.isPiglet).length > 0
+                                    ? AppConstants.primaryColor
+                                    : Colors.grey,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        )
+                      : FloatingActionButton(
+                          onPressed: _isProcessing || !_isCameraReady || !_isHorizontal
+                              ? null
+                              : _captureAndProcess,
+                          backgroundColor: _isHorizontal
+                              ? AppConstants.primaryColor
+                              : Colors.grey,
+                          foregroundColor: Colors.white,
+                          child: _isProcessing
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Icon(Icons.camera, size: 30),
+                        ),
             ),
           ),
         ],
