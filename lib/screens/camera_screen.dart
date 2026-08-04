@@ -25,6 +25,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _showMeasurementGuides = false;
   Offset? _manualPigletPosition;
   Uint8List? _capturedImageBytes;
+  bool _isHorizontal = false;
 
   @override
   void initState() {
@@ -231,6 +232,12 @@ class _CameraScreenState extends State<CameraScreen> {
             balls: _balls,
             showMeasurementGuides: _showMeasurementGuides,
             onPigletPositionChanged: _showMeasurementGuides ? _handlePigletPositionChanged : null,
+            onHorizontalChanged: (isHorizontal) {
+              setState(() {
+                _isHorizontal = isHorizontal;
+              });
+            },
+            horizontalThreshold: 0.1,
           ),
           // Instruction text at top
           Positioned(
@@ -260,6 +267,36 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
           ),
+          // Horizontal guidance message
+          if (!_isHorizontal && !_showMeasurementGuides)
+            Positioned(
+              bottom: AppConstants.largePadding * 2,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConstants.defaultPadding,
+                    vertical: AppConstants.smallPadding,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.warning_amber, color: Colors.amber, size: 20),
+                      SizedBox(width: AppConstants.smallPadding),
+                      Text(
+                        'Inclinez le téléphone à l\'horizontal',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           // Camera button at bottom
           Positioned(
             bottom: AppConstants.largePadding,
@@ -292,8 +329,12 @@ class _CameraScreenState extends State<CameraScreen> {
                       ],
                     )
                   : FloatingActionButton(
-                      onPressed: _captureAndProcess,
-                      backgroundColor: AppConstants.primaryColor,
+                      onPressed: _isProcessing || !_isCameraReady || !_isHorizontal
+                          ? null
+                          : _captureAndProcess,
+                      backgroundColor: _isHorizontal
+                          ? AppConstants.primaryColor
+                          : Colors.grey,
                       foregroundColor: Colors.white,
                       child: _isProcessing
                           ? const CircularProgressIndicator(color: Colors.white)

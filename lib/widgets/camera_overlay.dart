@@ -8,12 +8,16 @@ class CameraOverlay extends StatefulWidget {
   final List<Ball> balls;
   final bool showMeasurementGuides;
   final Function(Offset)? onPigletPositionChanged;
+  final Function(bool)? onHorizontalChanged;
+  final double horizontalThreshold;
 
   const CameraOverlay({
     super.key,
     required this.balls,
     this.showMeasurementGuides = false,
     this.onPigletPositionChanged,
+    this.onHorizontalChanged,
+    this.horizontalThreshold = 0.1,
   });
 
   @override
@@ -24,12 +28,14 @@ class _CameraOverlayState extends State<CameraOverlay> {
   double _devicePitch = 0.0;
   double _deviceRoll = 0.0;
   bool _isListening = false;
+  bool _isHorizontal = false;
   Offset? _manualPigletPosition;
   Offset? _dragStartPosition;  // Pour suivre le début du glissement
 
   @override
   void initState() {
     super.initState();
+    _isHorizontal = false;
     _startListening();
   }
 
@@ -49,6 +55,16 @@ class _CameraOverlayState extends State<CameraOverlay> {
         _deviceRoll = event.x;
         _devicePitch = event.y;
       });
+      
+      // Calculer l'inclinaison totale
+      final tilt = sqrt(_devicePitch * _devicePitch + _deviceRoll * _deviceRoll);
+      final newIsHorizontal = tilt < widget.horizontalThreshold;
+      
+      // Notifier si l'état a changé
+      if (newIsHorizontal != _isHorizontal) {
+        _isHorizontal = newIsHorizontal;
+        widget.onHorizontalChanged?.call(_isHorizontal);
+      }
     });
   }
 
