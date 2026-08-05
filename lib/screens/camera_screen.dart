@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:boul_o_metre/services/camera_service.dart';
 import 'package:boul_o_metre/services/image_processor.dart';
 import 'package:boul_o_metre/widgets/camera_overlay.dart';
@@ -27,11 +28,20 @@ class _CameraScreenState extends State<CameraScreen> {
   Offset? _manualPigletPosition;
   Uint8List? _capturedImageBytes;
   bool _isHorizontal = false;
+  double _horizontalThreshold = 0.1;
 
   @override
   void initState() {
     super.initState();
+    _loadHorizontalThreshold();
     _initializeCamera();
+  }
+
+  Future<void> _loadHorizontalThreshold() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _horizontalThreshold = prefs.getDouble('horizontalThreshold') ?? 0.1;
+    });
   }
 
   @override
@@ -295,7 +305,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 _isHorizontal = isHorizontal;
               });
             },
-            horizontalThreshold: 0.1,
+            horizontalThreshold: _horizontalThreshold,
           ),
           // Instruction text at top
           Positioned(

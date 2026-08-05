@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:boul_o_metre/app/routes.dart';
 import 'package:boul_o_metre/utils/constants.dart';
+import 'package:boul_o_metre/screens/settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -60,6 +61,26 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: AppConstants.smallPadding),
               OutlinedButton.icon(
                 onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+                label: const Text('Réglages'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConstants.defaultPadding,
+                    vertical: AppConstants.defaultPadding,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppConstants.smallPadding),
+              OutlinedButton.icon(
+                onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Fonctionnalite a venir dans la V2'),
@@ -80,7 +101,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppConstants.largePadding),
               Text(
-                'Version 1.0.0 - Mesure de distances',
+                'Version 1.0.0a - Mesure de distances',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.grey,
                 ),
