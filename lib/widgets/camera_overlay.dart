@@ -21,7 +21,7 @@ class CameraOverlay extends StatefulWidget {
     this.onPigletPositionChanged,
     this.onBallAdded,
     this.onHorizontalChanged,
-    this.horizontalThreshold = 0.1,
+    this.horizontalThreshold = 0.2,
   });
 
   @override

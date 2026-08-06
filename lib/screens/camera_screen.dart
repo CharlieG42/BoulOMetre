@@ -28,7 +28,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Offset? _manualPigletPosition;
   Uint8List? _capturedImageBytes;
   bool _isHorizontal = false;
-  double _horizontalThreshold = 0.1;
+  double _horizontalThreshold = 0.2;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _loadHorizontalThreshold() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _horizontalThreshold = prefs.getDouble('horizontalThreshold') ?? 0.1;
+      _horizontalThreshold = prefs.getDouble('horizontalThreshold') ?? 0.2;
     });
   }
 

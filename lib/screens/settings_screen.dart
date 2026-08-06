@@ -10,7 +10,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  double _horizontalThreshold = 0.1;
+  double _horizontalThreshold = 0.2;
   bool _isLoading = true;
 
   @override
@@ -22,7 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _horizontalThreshold = prefs.getDouble('horizontalThreshold') ?? 0.1;
+      _horizontalThreshold = prefs.getDouble('horizontalThreshold') ?? 0.2;
       _isLoading = false;
     });
   }
