@@ -45,21 +45,21 @@ jobs:
           ndk-version: '25.2.9519653'
           cmake-version: '3.22.1'
       
-      - name: Accept ALL Android licenses (global)
+      - name: Accept ALL Android licenses
         run: |
-          echo "=== Accepting ALL Android licenses (global) ==="
-          yes | sdkmanager --licenses || true
-          yes | sdkmanager --licenses || true
-          yes | sdkmanager --licenses || true
-          echo "=== Global licenses accepted ==="
+          echo "=== Accepting ALL Android licenses ==="
+          yes | sdkmanager --sdk_root=${ANDROID_HOME} --licenses || true
+          yes | sdkmanager --sdk_root=${ANDROID_HOME} --licenses || true
+          yes | sdkmanager --sdk_root=${ANDROID_HOME} --licenses || true
+          echo "=== All licenses accepted ==="
       
       - name: Install required Android packages
         run: |
           echo "=== Installing required Android packages ==="
-          sdkmanager "platforms;android-33"
-          sdkmanager "build-tools;33.0.0"
-          sdkmanager "platform-tools"
-          sdkmanager "cmdline-tools;latest"
+          sdkmanager --sdk_root=${ANDROID_HOME} "platforms;android-33"
+          sdkmanager --sdk_root=${ANDROID_HOME} "build-tools;33.0.0"
+          sdkmanager --sdk_root=${ANDROID_HOME} "platform-tools"
+          sdkmanager --sdk_root=${ANDROID_HOME} "cmdline-tools;latest"
           echo "=== Android packages installed ==="
       
       - name: Set Android environment variables
@@ -70,7 +70,9 @@ jobs:
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> $GITHUB_ENV
           echo "ANDROID_NDK_PATH=${ANDROID_NDK_HOME}" >> $GITHUB_ENV
           echo "JAVA_HOME=${JAVA_HOME}" >> $GITHUB_ENV
-          echo "PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${ANDROID_NDK_HOME}:${JAVA_HOME}/bin:${PATH}" >> $GITHUB_ENV
+          # Add build-tools to PATH for aidl
+          BUILD_TOOLS_PATH="${ANDROID_HOME}/build-tools/33.0.0"
+          echo "PATH=${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:${BUILD_TOOLS_PATH}:${ANDROID_NDK_HOME}:${JAVA_HOME}/bin:${PATH}" >> $GITHUB_ENV
           echo "=== Android environment set ==="
       
       - name: Verify Android environment
@@ -78,8 +80,8 @@ jobs:
           echo "=== Verifying Android Environment ==="
           java -version
           adb version
-          which aidl
-          sdkmanager --list
+          which aidl || { echo "ERROR: aidl not found in PATH"; echo "PATH is: $PATH"; exit 1; }
+          sdkmanager --sdk_root=${ANDROID_HOME} --list | grep -E "(build-tools|platform-tools|platforms;android-33)"
           echo "ANDROID_HOME: ${ANDROID_HOME}"
           echo "ANDROID_NDK_HOME: ${ANDROID_NDK_HOME}"
           echo "JAVA_HOME: ${JAVA_HOME}"
@@ -89,21 +91,22 @@ jobs:
         working-directory: py_boulometre
         run: |
           echo "=== Configuring buildozer.spec ==="
-          # Remove any existing sdk_path and ndk_path lines
+          # Remove any existing sdk_path, ndk_path, and skip lines
           sed -i '/^android\.sdk_path/d' buildozer.spec
           sed -i '/^android\.ndk_path/d' buildozer.spec
+          sed -i '/^android\.skip/d' buildozer.spec
           
           # Add paths to use existing SDK/NDK
           echo "android.sdk_path = ${ANDROID_HOME}" >> buildozer.spec
           echo "android.ndk_path = ${ANDROID_NDK_HOME}" >> buildozer.spec
           
-          # Disable automatic download of SDK/NDK by Buildozer
-          echo "android.skip_build_tools_download = True" >> buildozer.spec
+          # Disable automatic download of SDK/NDK/Build-Tools
           echo "android.skip_sdk_download = True" >> buildozer.spec
           echo "android.skip_ndk_download = True" >> buildozer.spec
+          echo "android.skip_build_tools_download = True" >> buildozer.spec
           
           echo "=== buildozer.spec configured ==="
-          tail -10 buildozer.spec
+          tail -15 buildozer.spec
       
       - name: Build APK with Buildozer
         working-directory: py_boulometre

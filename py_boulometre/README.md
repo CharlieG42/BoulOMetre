@@ -16,10 +16,89 @@ PyBoul'O'Mètre est la version Python/Kivy de l'application Boul'O'Mètre, conç
 
 ## 📱 Prérequis
 
-- Python 3.8+
-- Kivy 2.1.0+
-- Buildozer (pour la compilation Android)
-- OpenCV (optionnel, pour le traitement d'image avancé)
+### Pour développement local (PC)
+
+#### Sur Linux (Ubuntu/Debian)
+```bash
+# Dépendances système
+sudo apt-get update
+sudo apt-get install -y git python3 python3-pip python3-venv \
+    openjdk-17-jdk-headless autoconf libtool pkg-config \
+    zlib1g-dev cmake libffi-dev libssl-dev
+
+# Créer un environnement virtuel
+python3 -m venv venv
+source venv/bin/activate
+
+# Installer les dépendances Python
+pip install -r requirements.txt
+```
+
+#### Sur macOS
+```bash
+# Installer les dépendances avec Homebrew
+brew install python@3.10 openjdk@17 autoconf libtool pkg-config cmake
+
+# Créer un environnement virtuel
+python3 -m venv venv
+source venv/bin/activate
+
+# Installer les dépendances Python
+pip install -r requirements.txt
+```
+
+#### Sur Windows
+```bash
+# Installer Python 3.10+ depuis python.org
+# Installer Java JDK 17 depuis adoptium.net
+
+# Créer un environnement virtuel
+python -m venv venv
+venv\Scripts\activate
+
+# Installer les dépendances Python
+pip install -r requirements.txt
+```
+
+### Pour Android (via Buildozer)
+
+#### Installation de Buildozer
+```bash
+pip install buildozer
+```
+
+#### Installation des outils Android
+- **Android SDK** : Télécharger depuis [Android Studio](https://developer.android.com/studio) ou utiliser `sdkmanager`
+- **Android NDK** : Version **25.2.9519653** (recommandée)
+- **Java JDK** : Version **17** (OpenJDK Temurin recommandé)
+
+#### Configuration des variables d'environnement
+```bash
+# Linux/macOS
+export ANDROID_HOME=/chemin/vers/android-sdk
+export ANDROID_NDK_HOME=/chemin/vers/android-ndk
+export JAVA_HOME=/chemin/vers/jdk-17
+export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK_HOME:$JAVA_HOME/bin:$PATH
+
+# Windows
+set ANDROID_HOME=C:\chemin\vers\android-sdk
+set ANDROID_NDK_HOME=C:\chemin\vers\android-ndk
+set JAVA_HOME=C:\chemin\vers\jdk-17
+set PATH=%ANDROID_HOME%\tools;%ANDROID_HOME%\platform-tools;%ANDROID_NDK_HOME%;%JAVA_HOME%\bin;%PATH%
+```
+
+#### Accepter les licences Android
+```bash
+yes | sdkmanager --licenses
+```
+
+#### Installer les packages Android nécessaires
+```bash
+sdkmanager "platforms;android-33"
+sdkmanager "build-tools;33.0.0"
+sdkmanager "platform-tools"
+sdkmanager "cmdline-tools;latest"
+```
 
 ## 🚀 Installation
 
@@ -51,22 +130,21 @@ PyBoul'O'Mètre est la version Python/Kivy de l'application Boul'O'Mètre, conç
 
 ### Pour Android (via Buildozer)
 
-1. Installer Buildozer
-   ```bash
-   pip install buildozer
-   ```
+1. **Configurer l'environnement** (voir section Prérequis)
 
-2. Initialiser Buildozer
-   ```bash
-   buildozer init
-   ```
+2. **Configurer buildozer.spec**
+   - Vérifier que `android.sdk_path` et `android.ndk_path` pointent vers les bons chemins
+   - Vérifier que `android.api = 33` et `android.ndk = 25.2.9519653`
 
-3. Modifier le fichier `buildozer.spec` selon vos besoins
-
-4. Builder l'APK
+3. **Builder l'APK**
    ```bash
+   cd py_boulometre
+   buildozer android clean
    buildozer -v android debug
    ```
+
+4. **Trouver l'APK**
+   L'APK sera généré dans `bin/` avec un nom comme `pyboulometre-0.1.0-debug.apk`
 
 ## 📁 Structure du projet
 
@@ -81,7 +159,7 @@ py_boulometre/
 │   │   ├── camera.kv        # Écran caméra (KV language)
 │   │   ├── camera.py        # Logique de l'écran caméra
 │   │   ├── results.kv       # Écran résultats (KV language)
-│   │   └── results.py       # Logique de l'écran résultats
+│   │   ├── results.py       # Logique de l'écran résultats
 │   │   ├── settings.kv      # Écran réglages (KV language)
 │   │   └── settings.py      # Logique de l'écran réglages
 │   ├── widgets/
@@ -99,7 +177,7 @@ py_boulometre/
 │   └── icons/               # Icônes de l'application
 ├── requirements.txt         # Dépendances Python
 ├── buildozer.spec           # Configuration Buildozer
-└── README.md
+└── README.md               # Documentation complète
 ```
 
 ## 🎨 Interface Utilisateur
@@ -165,27 +243,28 @@ L'application utilise le langage KV de Kivy pour définir les interfaces utilisa
 
 ### Workflow de Build
 
-Un workflow GitHub Actions est configuré pour **construire automatiquement l'APK** à chaque push sur la branche `py-kivy-version` ou `main` (quand des fichiers dans `py_boulometre/` sont modifiés).
+Un workflow GitHub Actions est configuré pour **construire automatiquement l'APK** à chaque push sur la branche `py-kivy-version` ou `main`.
 
-**Fichier du workflow** : `.github/workflows/python_build_apk.yml`
+**Fichier du workflow** : `.github/workflows/py_boulometre_build_apk.yml`
 
 ### Déclenchement
 
 Le workflow se déclenche automatiquement dans les cas suivants :
 - ✅ **Push** sur les branches `py-kivy-version` ou `main`
 - ✅ **Pull Request** vers les branches `py-kivy-version` ou `main`
-- ✅ **Modifications** dans le dossier `py_boulometre/`
 
 ### Processus de Build
 
 1. **Checkout** du dépôt
 2. **Setup Python 3.10**
-3. **Installation** de Buildozer et des dépendances
-4. **Configuration** de l'environnement Android (SDK, NDK)
-5. **Acceptation** des licences Android
-6. **Build** de l'APK avec Buildozer
-7. **Renommage** de l'APK avec le préfixe `PyBoulOMetre`
-8. **Upload** de l'APK comme artifact
+3. **Installation** des dépendances système (OpenJDK, etc.)
+4. **Installation** de Buildozer
+5. **Installation Android SDK/NDK** (version 25.2.9519653)
+6. **Acceptation** de toutes les licences Android
+7. **Installation** des packages Android nécessaires (platforms, build-tools, etc.)
+8. **Configuration** de buildozer.spec avec les chemins existants
+9. **Build** de l'APK avec Buildozer
+10. **Upload** de l'APK comme artifact
 
 ### Récupération de l'APK
 
@@ -197,62 +276,83 @@ Après chaque build réussi :
 
 Le fichier APK portera le nom : `PyBoulOMetre-{NUMERO}-debug.apk`
 
-### Commande manuelle pour tester localement
-
-Si vous voulez tester le build localement avant de pousser :
-
-```bash
-cd py_boulometre
-pip install buildozer
-buildozer init
-buildozer -v android debug
-```
-
-L'APK sera généré dans `py_boulometre/bin/` avec un nom comme `pyboulometre-0.1-debug.apk`.
-
-## 📝 Configuration Buildozer
+### Configuration Buildozer
 
 Le fichier `buildozer.spec` est pré-configuré avec :
 - **Package name** : `pyboulometre`
 - **Package domain** : `com.charlieg42`
 - **Title** : `PyBoul'O'Mètre`
 - **Android API** : 33 (minimum: 21)
+- **NDK version** : 25.2.9519653
 - **Architecture** : arm64-v8a
 - **Bootstrap** : sdl2
 
-Vous pouvez modifier ces paramètres selon vos besoins.
+### Commandes utiles pour Buildozer
+
+```bash
+# Initialiser Buildozer (si buildozer.spec n'existe pas)
+buildozer init
+
+# Builder l'APK (debug)
+buildozer android debug
+
+# Builder l'APK (release)
+buildozer android release
+
+# Nettoyer avant un nouveau build
+buildozer android clean
+
+# Voir la version de Buildozer
+buildozer --version
+
+# Voir les informations de configuration
+buildozer android debug -v
+```
 
 ## ⚠️ Problèmes courants et solutions
 
-### 1. Erreur de caméra sur mobile
-**Problème** : La caméra ne s'initialise pas sur Android.
-**Solution** : Vérifiez que les permissions sont correctement configurées dans `buildozer.spec` :
-```ini
-android.permissions = CAMERA, VIBRATE
-android.api = 33
-android.minapi = 21
-```
+### 1. Erreur : Aidl not found
+**Problème** : L'outil Aidl (Android Interface Definition Language) n'est pas trouvé.
+**Solution** : 
+- Installer les Build-Tools : `sdkmanager "build-tools;33.0.0"`
+- Ajouter au PATH : `export PATH=$ANDROID_HOME/build-tools/33.0.0:$PATH`
 
-### 2. Buildozer échoue avec Android NDK
-**Problème** : Erreur de compilation liée au NDK.
-**Solution** : Assurez-vous d'utiliser la bonne version du NDK (23b) :
-```ini
-android.ndk = 23b
-```
+### 2. Erreur : No Java compiler found
+**Problème** : Java n'est pas installé ou non détecté.
+**Solution** : 
+- Installer OpenJDK 17 : `sudo apt-get install openjdk-17-jdk-headless`
+- Configurer JAVA_HOME : `export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`
 
-### 3. Dépendances manquantes
-**Problème** : Erreur d'importation de modules.
-**Solution** : Vérifiez que toutes les dépendances sont dans `requirements.txt` et installez-les :
-```bash
-pip install -r requirements.txt
-```
+### 3. Erreur : Android NDK not found
+**Problème** : Le NDK n'est pas installé ou non détecté.
+**Solution** : 
+- Installer le NDK 25.2.9519653 via Android Studio ou sdkmanager
+- Configurer ANDROID_NDK_HOME : `export ANDROID_NDK_HOME=/chemin/vers/ndk`
 
-### 4. Problème de texture OpenCV
-**Problème** : Erreur de conversion d'image.
-**Solution** : Assurez-vous que OpenCV est installé :
-```bash
-pip install opencv-python
-```
+### 4. Erreur : License not accepted
+**Problème** : Les licences Android ne sont pas acceptées.
+**Solution** : `yes | sdkmanager --licenses`
+
+### 5. Erreur : Recipe not found for...
+**Problème** : Une dépendance Python est manquante.
+**Solution** : 
+- Vérifier que toutes les dépendances sont dans `requirements.txt`
+- Installer la dépendance manquante : `pip install <package>`
+
+### 6. Erreur : Buildozer failed to execute command
+**Problème** : Problème de mémoire ou de configuration.
+**Solution** : 
+- Augmenter la mémoire disponible (Buildozer a besoin de 4GB+)
+- Vérifier que tous les chemins (SDK, NDK, Java) sont corrects
+
+### 7. Erreur : No module named 'kivy'
+**Problème** : Kivy n'est pas installé.
+**Solution** : `pip install kivy==2.1.0`
+
+### 8. Problème : L'APK est trop gros
+**Solution** : 
+- Utiliser `opencv-python-headless` au lieu de `opencv-python`
+- Supprimer les dépendances inutiles de `requirements.txt`
 
 ## 🔄 Comparaison avec la version Flutter
 
@@ -266,6 +366,7 @@ pip install opencv-python
 | **Build Android** | ✅ Flutter build | ✅ Buildozer |
 | **Hot Reload** | ✅ | ❌ |
 | **Communauté** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Facilité de build** | ⭐⭐⭐⭐⭐ | ⭐⭐ |
 
 ## 🤝 Contribution
 
