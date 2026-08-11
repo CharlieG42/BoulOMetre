@@ -4,15 +4,13 @@ on:
   push:
     branches: [ py-kivy-version, main, vibe/** ]
     paths:
-      - .github/workflows/py_boulometre_build_apk.yml
-
       - 'py_boulometre/**'
+      - '.github/workflows/py_boulometre_build_apk.yml'
   pull_request:
     branches: [ py-kivy-version, main ]
     paths:
-      - .github/workflows/py_boulometre_build_apk.yml
-
       - 'py_boulometre/**'
+      - '.github/workflows/py_boulometre_build_apk.yml'
 
 jobs:
   build_apk:
@@ -32,19 +30,34 @@ jobs:
       
       - name: Install system dependencies
         run: |
+          echo "=== Installing system dependencies ==="
           sudo apt-get update
           sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev cmake libffi-dev libssl-dev
+          # Install OpenJDK 17 (headless version preferred)
           sudo apt-get install -y openjdk-17-jdk-headless || sudo apt-get install -y openjdk-17-jdk
+          echo "=== System dependencies installed ==="
+      
+      - name: Verify Java installation
+        run: |
+          echo "=== Verifying Java ==="
+          java -version
+          echo "JAVA_HOME=$JAVA_HOME"
+          which javac
       
       - name: Install Buildozer
         run: |
+          echo "=== Installing Buildozer ==="
           python -m pip install --upgrade pip
           pip install buildozer
+          buildozer --version
+          echo "=== Buildozer installed ==="
       
       - name: Install Python dependencies
         run: |
+          echo "=== Installing Python dependencies ==="
           cd py_boulometre
           pip install -r requirements.txt
+          echo "=== Python dependencies installed ==="
       
       - name: Install Android SDK and NDK
         uses: android-actions/setup-android@v4
@@ -55,34 +68,59 @@ jobs:
       
       - name: Set Android environment variables
         run: |
+          echo "=== Setting Android environment ==="
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_NDK_PATH=$ANDROID_NDK_HOME" >> $GITHUB_ENV
           echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
           echo "PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK_HOME:$JAVA_HOME/bin:$PATH" >> $GITHUB_ENV
+          echo "=== Android environment set ==="
       
       - name: Accept Android licenses
-        run: yes | sdkmanager --licenses || true
+        run: |
+          echo "=== Accepting Android licenses ==="
+          yes | sdkmanager --licenses || true
+          echo "=== Licenses accepted ==="
       
       - name: Verify Android environment
         run: |
-          echo "=== Android Environment ==="
+          echo "=== Verifying Android Environment ==="
           echo "ANDROID_HOME: $ANDROID_HOME"
           echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
           echo "JAVA_HOME: $JAVA_HOME"
-          which java || echo "Java not found"
-          which adb || echo "ADB not found"
+          echo "PATH: $PATH"
+          which java || { echo "ERROR: Java not found"; exit 1; }
+          which adb || { echo "ERROR: ADB not found"; exit 1; }
+          which ndk-build || echo "WARNING: ndk-build not found"
+          sdkmanager --list 2>&1 | head -20
+          echo "=== Android environment verified ==="
       
       - name: Build APK with Buildozer
         working-directory: py_boulometre
         run: |
           echo "=== Starting Buildozer build ==="
+          echo "Current directory: $(pwd)"
+          echo "Files in directory:"
+          ls -la
+          
           if [ ! -f buildozer.spec ]; then
             echo "ERROR: buildozer.spec not found!"
             exit 1
           fi
-          buildozer -v android debug 2>&1 | tee build.log || true
+          
+          echo "=== buildozer.spec content (first 30 lines) ==="
+          head -30 buildozer.spec
+          
+          echo "=== Running buildozer android debug ==="
+          # Clean any previous build
+          buildozer android clean
+          
+          # Build with verbose output
+          buildozer -v android debug 2>&1 | tee build.log
+          
+          echo "=== Buildozer finished ==="
+          echo "Exit code: $?"
         timeout-minutes: 90
         continue-on-error: true
       
@@ -90,32 +128,69 @@ jobs:
         id: find_apk
         working-directory: py_boulometre
         run: |
+          echo "=== Searching for APK files ==="
+          
           APK_FILE=""
-          if ls bin/*.apk 1>/dev/null 2>&1; then
-            APK_FILE=$(ls bin/*.apk | head -n 1)
+          
+          # Search in bin/ directory
+          echo "Checking bin/ directory..."
+          if [ -d "bin" ]; then
+            ls -la bin/
+            if ls bin/*.apk 1>/dev/null 2>&1; then
+              APK_FILE=$(ls bin/*.apk | head -n 1)
+              echo "Found in bin/: $APK_FILE"
+            fi
           fi
-          if [ -z "$APK_FILE" ] && [ -d ".buildozer" ]; then
-            APK_FILE=$(find .buildozer -name "*.apk" -type f 2>/dev/null | head -n 1)
+          
+          # Search in .buildozer/ directory
+          echo "Checking .buildozer/ directory..."
+          if [ -d ".buildozer" ]; then
+            find .buildozer -name "*.apk" -type f 2>/dev/null
+            if [ -n "$APK_FILE" ]; then
+              : # Already found
+            elif ls .buildozer/android/platform/build-*/dists/*.apk 1>/dev/null 2>&1; then
+              APK_FILE=$(ls .buildozer/android/platform/build-*/dists/*.apk | head -n 1)
+              echo "Found in .buildozer: $APK_FILE"
+            fi
           fi
+          
+          # Global search
           if [ -z "$APK_FILE" ]; then
+            echo "Global search..."
+            find . -name "*.apk" -type f 2>/dev/null
             APK_FILE=$(find . -name "*.apk" -type f 2>/dev/null | head -n 1)
+            if [ -n "$APK_FILE" ]; then
+              echo "Found by global search: $APK_FILE"
+            fi
           fi
+          
           if [ -n "$APK_FILE" ]; then
             echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
+            echo "::notice::Found APK: $APK_FILE"
+            ls -lh "$APK_FILE"
             echo "apk_found=true" >> $GITHUB_OUTPUT
           else
+            echo "::error::No APK file found after build"
             echo "apk_found=false" >> $GITHUB_OUTPUT
+            # Show build.log tail for debugging
+            echo "=== Last 100 lines of build.log ==="
+            tail -100 build.log || echo "build.log not found"
           fi
       
       - name: Rename APK to start with Py
         if: steps.find_apk.outputs.apk_found == 'true' && env.APK_FILE != ''
         working-directory: py_boulometre
         run: |
+          echo "=== Renaming APK ==="
           APK_DIR=$(dirname "$APK_FILE")
+          APK_NAME=$(basename "$APK_FILE")
           NEW_APK_NAME="PyBoulOMetre-${{ github.run_number }}-debug.apk"
           NEW_APK_PATH="$APK_DIR/$NEW_APK_NAME"
+          
           mv "$APK_FILE" "$NEW_APK_PATH"
           echo "APK_FILE=$NEW_APK_PATH" >> $GITHUB_ENV
+          echo "::notice::Renamed APK to: $NEW_APK_NAME"
+          ls -lh "$NEW_APK_PATH"
       
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
