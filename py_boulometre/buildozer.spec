@@ -59,3 +59,9 @@ android.arch = arm64-v8a
 
 # (int) Android log level to use
 android.log_level = 2
+
+# (str) Android SDK path (will be set by workflow)
+# android.sdk_path = /home/runner/.buildozer/android/platform/android-sdk
+
+# (str) Android NDK path (will be set by workflow)
+# android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25.2.9519653
