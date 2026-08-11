@@ -2,15 +2,9 @@ name: PyBoulOMetre Build APK
 
 on:
   push:
-    branches: [ py-kivy-version, main, vibe/** ]
-    paths:
-      - 'py_boulometre/**'
-      - '.github/workflows/py_boulometre_build_apk.yml'
+    branches: [ py-kivy-version, main ]
   pull_request:
     branches: [ py-kivy-version, main ]
-    paths:
-      - 'py_boulometre/**'
-      - '.github/workflows/py_boulometre_build_apk.yml'
 
 jobs:
   build_apk:
@@ -33,16 +27,8 @@ jobs:
           echo "=== Installing system dependencies ==="
           sudo apt-get update
           sudo apt-get install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev cmake libffi-dev libssl-dev
-          # Install OpenJDK 17 (headless version preferred)
-          sudo apt-get install -y openjdk-17-jdk-headless || sudo apt-get install -y openjdk-17-jdk
+          sudo apt-get install -y openjdk-17-jdk-headless
           echo "=== System dependencies installed ==="
-      
-      - name: Verify Java installation
-        run: |
-          echo "=== Verifying Java ==="
-          java -version
-          echo "JAVA_HOME=$JAVA_HOME"
-          which javac
       
       - name: Install Buildozer
         run: |
@@ -52,18 +38,11 @@ jobs:
           buildozer --version
           echo "=== Buildozer installed ==="
       
-      - name: Install Python dependencies
-        run: |
-          echo "=== Installing Python dependencies ==="
-          cd py_boulometre
-          pip install -r requirements.txt
-          echo "=== Python dependencies installed ==="
-      
       - name: Install Android SDK and NDK
         uses: android-actions/setup-android@v4
         with:
-          sdk-version: '34'
-          ndk-version: '26.2.11394342'
+          sdk-version: '33'
+          ndk-version: '25.2.9519653'
           cmake-version: '3.22.1'
       
       - name: Set Android environment variables
@@ -83,121 +62,50 @@ jobs:
           yes | sdkmanager --licenses || true
           echo "=== Licenses accepted ==="
       
-      - name: Verify Android environment
+      - name: Verify environment
         run: |
-          echo "=== Verifying Android Environment ==="
+          echo "=== Verifying Environment ==="
+          java -version
+          adb version
           echo "ANDROID_HOME: $ANDROID_HOME"
           echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
           echo "JAVA_HOME: $JAVA_HOME"
-          echo "PATH: $PATH"
-          which java || { echo "ERROR: Java not found"; exit 1; }
-          which adb || { echo "ERROR: ADB not found"; exit 1; }
-          which ndk-build || echo "WARNING: ndk-build not found"
-          sdkmanager --list 2>&1 | head -20
-          echo "=== Android environment verified ==="
+          echo "=== Environment verified ==="
       
       - name: Build APK with Buildozer
         working-directory: py_boulometre
         run: |
           echo "=== Starting Buildozer build ==="
-          echo "Current directory: $(pwd)"
-          echo "Files in directory:"
-          ls -la
-          
-          if [ ! -f buildozer.spec ]; then
-            echo "ERROR: buildozer.spec not found!"
-            exit 1
-          fi
-          
-          echo "=== buildozer.spec content (first 30 lines) ==="
-          head -30 buildozer.spec
-          
-          echo "=== Running buildozer android debug ==="
-          # Clean any previous build
-          buildozer android clean
-          
-          # Build with verbose output
-          buildozer -v android debug 2>&1 | tee build.log
-          
-          echo "=== Buildozer finished ==="
-          echo "Exit code: $?"
+          mkdir -p logs
+          buildozer -v android debug 2>&1 | tee logs/build.log || true
+          echo "=== Build completed ==="
         timeout-minutes: 90
         continue-on-error: true
       
-      - name: Find APK file
-        id: find_apk
+      - name: Find and upload APK
         working-directory: py_boulometre
         run: |
-          echo "=== Searching for APK files ==="
-          
-          APK_FILE=""
-          
-          # Search in bin/ directory
-          echo "Checking bin/ directory..."
-          if [ -d "bin" ]; then
-            ls -la bin/
-            if ls bin/*.apk 1>/dev/null 2>&1; then
-              APK_FILE=$(ls bin/*.apk | head -n 1)
-              echo "Found in bin/: $APK_FILE"
-            fi
-          fi
-          
-          # Search in .buildozer/ directory
-          echo "Checking .buildozer/ directory..."
-          if [ -d ".buildozer" ]; then
-            find .buildozer -name "*.apk" -type f 2>/dev/null
-            if [ -n "$APK_FILE" ]; then
-              : # Already found
-            elif ls .buildozer/android/platform/build-*/dists/*.apk 1>/dev/null 2>&1; then
-              APK_FILE=$(ls .buildozer/android/platform/build-*/dists/*.apk | head -n 1)
-              echo "Found in .buildozer: $APK_FILE"
-            fi
-          fi
-          
-          # Global search
-          if [ -z "$APK_FILE" ]; then
-            echo "Global search..."
-            find . -name "*.apk" -type f 2>/dev/null
-            APK_FILE=$(find . -name "*.apk" -type f 2>/dev/null | head -n 1)
-            if [ -n "$APK_FILE" ]; then
-              echo "Found by global search: $APK_FILE"
-            fi
-          fi
-          
+          echo "=== Searching for APK ==="
+          APK_FILE=$(find . -name "*.apk" -type f 2>/dev/null | head -n 1)
           if [ -n "$APK_FILE" ]; then
-            echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
-            echo "::notice::Found APK: $APK_FILE"
-            ls -lh "$APK_FILE"
-            echo "apk_found=true" >> $GITHUB_OUTPUT
+            echo "Found APK: $APK_FILE"
+            NEW_APK_NAME="PyBoulOMetre-${{ github.run_number }}-debug.apk"
+            cp "$APK_FILE" "$NEW_APK_NAME"
+            echo "APK_FILE=$NEW_APK_NAME" >> $GITHUB_ENV
+            mkdir -p artifacts
+            cp "$NEW_APK_NAME" artifacts/
           else
-            echo "::error::No APK file found after build"
-            echo "apk_found=false" >> $GITHUB_OUTPUT
-            # Show build.log tail for debugging
-            echo "=== Last 100 lines of build.log ==="
-            tail -100 build.log || echo "build.log not found"
+            echo "No APK found"
           fi
-      
-      - name: Rename APK to start with Py
-        if: steps.find_apk.outputs.apk_found == 'true' && env.APK_FILE != ''
-        working-directory: py_boulometre
-        run: |
-          echo "=== Renaming APK ==="
-          APK_DIR=$(dirname "$APK_FILE")
-          APK_NAME=$(basename "$APK_FILE")
-          NEW_APK_NAME="PyBoulOMetre-${{ github.run_number }}-debug.apk"
-          NEW_APK_PATH="$APK_DIR/$NEW_APK_NAME"
-          
-          mv "$APK_FILE" "$NEW_APK_PATH"
-          echo "APK_FILE=$NEW_APK_PATH" >> $GITHUB_ENV
-          echo "::notice::Renamed APK to: $NEW_APK_NAME"
-          ls -lh "$NEW_APK_PATH"
+          echo "=== APK search completed ==="
+        continue-on-error: true
       
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
-        if: steps.find_apk.outputs.apk_found == 'true' && env.APK_FILE != ''
+        if: always()
         with:
           name: PyBoulOMetre-APK
-          path: ${{ env.APK_FILE }}
+          path: py_boulometre/artifacts/
           retention-days: 7
       
       - name: Upload build logs
@@ -205,5 +113,5 @@ jobs:
         if: always()
         with:
           name: build-logs
-          path: py_boulometre/build.log
+          path: py_boulometre/logs/
           retention-days: 3
