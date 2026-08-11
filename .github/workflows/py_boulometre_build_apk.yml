@@ -4,10 +4,14 @@ on:
   push:
     branches: [ py-kivy-version, main, vibe/** ]
     paths:
+      - .github/workflows/py_boulometre_build_apk.yml
+
       - 'py_boulometre/**'
   pull_request:
     branches: [ py-kivy-version, main ]
     paths:
+      - .github/workflows/py_boulometre_build_apk.yml
+
       - 'py_boulometre/**'
 
 jobs:
