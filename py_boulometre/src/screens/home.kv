@@ -1,0 +1,75 @@
+#:kivy 1.0
+#:import Constants src.utils.constants.Constants
+#:import Helpers src.utils.helpers.Helpers
+
+<HomeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: Constants.DEFAULT_PADDING
+        spacing: Constants.SMALL_PADDING
+        
+        BoxLayout:
+            size_hint_y: None
+            height: dp(100)
+            
+            Image:
+                source: 'assets/icons/petanque.png' if 'petanque.png' in app.root_window.children[0].ids else ''
+                size_hint: None, None
+                size: dp(80), dp(80)
+                allow_stretch: True
+                keep_ratio: True
+                
+            Label:
+                text: Constants.APP_NAME
+                font_size: sp(24)
+                bold: True
+                color: Constants.PRIMARY_COLOR
+                halign: 'center'
+                valign: 'middle'
+        
+        Label:
+            text: Constants.APP_TAGLINE
+            font_size: sp(16)
+            color: Constants.TEXT_COLOR
+            halign: 'center'
+            size_hint_y: None
+            height: dp(40)
+        
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: Constants.SMALL_PADDING
+            padding: Constants.DEFAULT_PADDING, 0
+            
+            Button:
+                text: 'Lancer la mesure'
+                icon: 'camera' if 'camera' in app.root_window.children[0].ids else ''
+                size_hint_y: None
+                height: dp(60)
+                background_color: Constants.PRIMARY_COLOR
+                color: Constants.TEXT_LIGHT_COLOR
+                on_press: root.go_to_camera()
+                
+            Button:
+                text: 'Réglages'
+                size_hint_y: None
+                height: dp(50)
+                background_color: Constants.SURFACE_COLOR
+                color: Constants.PRIMARY_COLOR
+                on_press: root.go_to_settings()
+                
+            Button:
+                text: 'Historique des mesures'
+                size_hint_y: None
+                height: dp(50)
+                background_color: Constants.SURFACE_COLOR
+                color: Constants.PRIMARY_COLOR
+                on_press: root.show_history()
+        
+        Label:
+            text: 'Version 1.0.0 - Mesure de distances'
+            font_size: sp(12)
+            color: Constants.TEXT_COLOR
+            opacity: 0.7
+            halign: 'center'
+            size_hint_y: None
+            height: dp(30)

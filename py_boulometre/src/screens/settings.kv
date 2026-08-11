@@ -1,0 +1,128 @@
+#:kivy 1.0
+#:import Constants src.utils.constants.Constants
+
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: Constants.DEFAULT_PADDING
+        spacing: Constants.SMALL_PADDING
+        
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            
+            Label:
+                text: 'Réglages'
+                font_size: sp(20)
+                bold: True
+                color: Constants.TEXT_COLOR
+                halign: 'center'
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0]
+                on_press: root.go_back()
+                
+                Image:
+                    source: 'assets/icons/back.png' if 'back.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.PRIMARY_COLOR
+        
+        ScrollView:
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: max(self.minimum_height, root.height - dp(200))
+                padding: 0, Constants.SMALL_PADDING
+                spacing: Constants.SMALL_PADDING
+                
+                # Sensibilité de l'horizontalité
+                Label:
+                    text: 'Sensibilité de l\'horizontalité'
+                    font_size: sp(18)
+                    bold: True
+                    color: Constants.TEXT_COLOR
+                    halign: 'left'
+                    size_hint_y: None
+                    height: dp(40)
+                
+                Label:
+                    text: 'Ajustez la sensibilité requise pour que le bouton de capture soit activé.'
+                    font_size: sp(14)
+                    color: [0.6, 0.6, 0.6, 1]
+                    halign: 'left'
+                    size_hint_y: None
+                    height: dp(40)
+                
+                BoxLayout:
+                    size_hint_y: None
+                    height: dp(40)
+                    
+                    Label:
+                        text: 'Moins sensible'
+                        font_size: sp(14)
+                        color: Constants.TEXT_COLOR
+                        halign: 'left'
+                        valign: 'middle'
+                    
+                    Slider:
+                        id: threshold_slider
+                        value: root.horizontal_threshold
+                        min: 0.05
+                        max: 0.3
+                        step: 0.01
+                        on_value: root.horizontal_threshold = args[1]
+                    
+                    Label:
+                        text: 'Plus sensible'
+                        font_size: sp(14)
+                        color: Constants.TEXT_COLOR
+                        halign: 'right'
+                        valign: 'middle'
+                
+                Label:
+                    text: f'Valeur actuelle: {root.horizontal_threshold:.2f}'
+                    font_size: sp(14)
+                    color: Constants.TEXT_COLOR
+                    halign: 'center'
+                    size_hint_y: None
+                    height: dp(30)
+                
+                # Conseils
+                Label:
+                    text: 'Conseils:'
+                    font_size: sp(16)
+                    bold: True
+                    color: Constants.TEXT_COLOR
+                    halign: 'left'
+                    size_hint_y: None
+                    height: dp(40)
+                
+                Label:
+                    text: '- Une valeur basse (0.05-0.1) nécessite un téléphone très horizontal'
+                    font_size: sp(14)
+                    color: [0.6, 0.6, 0.6, 1]
+                    halign: 'left'
+                    size_hint_y: None
+                    height: dp(30)
+                
+                Label:
+                    text: '- Une valeur haute (0.2-0.3) est plus tolérante'
+                    font_size: sp(14)
+                    color: [0.6, 0.6, 0.6, 1]
+                    halign: 'left'
+                    size_hint_y: None
+                    height: dp(30)
+        
+        Button:
+            text: 'Sauvegarder'
+            size_hint_y: None
+            height: dp(50)
+            background_color: Constants.PRIMARY_COLOR
+            color: Constants.TEXT_LIGHT_COLOR
+            on_press: root._save_settings()

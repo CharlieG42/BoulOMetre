@@ -1,0 +1,152 @@
+#:kivy 1.0
+#:import Constants src.utils.constants.Constants
+#:import Helpers src.utils.helpers.Helpers
+
+<ResultsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: Constants.DEFAULT_PADDING
+        spacing: Constants.SMALL_PADDING
+        
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            
+            Label:
+                text: 'Résultats'
+                font_size: sp(20)
+                bold: True
+                color: Constants.TEXT_COLOR
+                halign: 'center'
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0]
+                on_press: root.share_results()
+                
+                Image:
+                    source: 'assets/icons/share.png' if 'share.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.PRIMARY_COLOR
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0]
+                on_press: root.new_measurement()
+                
+                Image:
+                    source: 'assets/icons/refresh.png' if 'refresh.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.PRIMARY_COLOR
+        
+        ScrollView:
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: max(self.minimum_height, root.height - dp(200))
+                padding: 0, Constants.SMALL_PADDING
+                spacing: Constants.SMALL_PADDING
+                
+                # Cochonnet
+                BoxLayout:
+                    size_hint_y: None
+                    height: dp(60)
+                    padding: Constants.DEFAULT_PADDING
+                    canvas.before:
+                        Color:
+                            rgba: Constants.SURFACE_COLOR
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: Constants.BORDER_RADIUS
+                    
+                    Image:
+                        source: 'assets/icons/piglet.png' if 'piglet.png' in app.root_window.children[0].ids else ''
+                        size_hint: None, None
+                        size: dp(30), dp(30)
+                        allow_stretch: True
+                        keep_ratio: True
+                    
+                    Label:
+                        text: 'Cochonnet'
+                        font_size: sp(18)
+                        bold: True
+                        color: Constants.TEXT_COLOR
+                        halign: 'left'
+                        valign: 'middle'
+                    
+                    Label:
+                        text: f'Position: ({root.get_piglet().x:.1f}, {root.get_piglet().y:.1f})' if root.get_piglet() else ''
+                        font_size: sp(14)
+                        color: [0.6, 0.6, 0.6, 1]
+                        halign: 'right'
+                        valign: 'middle'
+                
+                # Titre des boules
+                Label:
+                    text: 'Distances par rapport au cochonnet'
+                    font_size: sp(18)
+                    bold: True
+                    color: Constants.TEXT_COLOR
+                    halign: 'center'
+                    size_hint_y: None
+                    height: dp(40)
+                
+                # Liste des boules
+                BoxLayout:
+                    id: balls_list
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: Constants.SMALL_PADDING
+                    
+                    # Généré dynamiquement dans le code Python
+                
+                # Boule la plus proche
+                BoxLayout:
+                    id: closest_ball_card
+                    size_hint_y: None
+                    height: dp(80)
+                    padding: Constants.DEFAULT_PADDING
+                    canvas.before:
+                        Color:
+                            rgba: Constants.CLOSEST_BALL_COLOR[0], Constants.CLOSEST_BALL_COLOR[1], Constants.CLOSEST_BALL_COLOR[2], 0.1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: Constants.BORDER_RADIUS
+                    
+                    BoxLayout:
+                        orientation: 'vertical'
+                        
+                        Label:
+                            text: f'Boule la plus proche: {root.get_closest_ball().id}' if root.get_closest_ball() else ''
+                            font_size: sp(16)
+                            bold: True
+                            color: Constants.CLOSEST_BALL_COLOR
+                            halign: 'center'
+                        
+                        Label:
+                            text: f'Distance: {Helpers.format_distance(root.get_closest_ball().distance_to_piglet)}' if root.get_closest_ball() else ''
+                            font_size: sp(18)
+                            bold: True
+                            color: Constants.TEXT_COLOR
+                            halign: 'center'
+        
+        Button:
+            text: 'Retour'
+            size_hint_y: None
+            height: dp(50)
+            background_color: Constants.SURFACE_COLOR
+            color: Constants.PRIMARY_COLOR
+            on_press: root.go_back()

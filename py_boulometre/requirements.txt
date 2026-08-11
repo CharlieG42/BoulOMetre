@@ -1,0 +1,13 @@
+# Dépendances principales
+kivy==2.2.1
+kivymd==1.1.1
+opencv-python==4.9.0.80
+Pillow==10.2.0
+pyjnius==1.6.1
+
+# Pour Android (Buildozer)
+# buildozer==1.5.0
+# python-for-android==2023.03.10
+
+# Pour le développement
+numpy==1.26.4

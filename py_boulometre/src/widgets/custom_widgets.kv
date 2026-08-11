@@ -1,0 +1,220 @@
+#:kivy 1.0
+#:import Constants src.utils.constants.Constants
+#:import Helpers src.utils.helpers.Helpers
+#:import math math
+
+<CameraOverlay>:
+    canvas:
+        # Dessiner le réticule
+        Color:
+            rgba: Constants.PIGLET_COLOR
+        Line:
+            points: [
+                self.center_x - Constants.CROSSHAIR_SIZE, self.center_y,
+                self.center_x + Constants.CROSSHAIR_SIZE, self.center_y
+            ]
+            width: 3
+        Line:
+            points: [
+                self.center_x, self.center_y - Constants.CROSSHAIR_SIZE,
+                self.center_x, self.center_y + Constants.CROSSHAIR_SIZE
+            ]
+            width: 3
+        
+        # Cercle central (cochonnet)
+        Color:
+            rgba: Constants.PIGLET_COLOR
+        Ellipse:
+            pos: self.center_x - 8, self.center_y - 8
+            size: 16, 16
+        
+        # Cercle extérieur
+        Color:
+            rgba: Constants.PIGLET_COLOR[0], Constants.PIGLET_COLOR[1], Constants.PIGLET_COLOR[2], 0.5
+        Line:
+            circle: self.center_x, self.center_y, Constants.PIGLET_RADIUS
+            width: 2
+        
+        # Niveau à bulle
+        Color:
+            rgba: [0, 0, 0, 0.7]
+        Rectangle:
+            pos: self.width - 80, self.height - 40
+            size: 60, 60
+            radius: 8
+        
+        # Bulle du niveau
+        Color:
+            rgba: [0, 1, 0, 1] if abs(self.device_pitch) < 0.1 and abs(self.device_roll) < 0.1 else [1, 0, 0, 1]
+        Ellipse:
+            pos: (self.width - 80) + (30 - 10) - (abs(self.device_pitch) * 20), (self.height - 40) + (30 - 10) - (abs(self.device_roll) * 20)
+            size: 20, 20
+        
+        # Croix du niveau
+        Color:
+            rgba: [1, 1, 1, 1]
+        Line:
+            points: [
+                self.width - 80 + 22, self.height - 40 + 30,
+                self.width - 80 + 38, self.height - 40 + 30
+            ]
+            width: 1.5
+        Line:
+            points: [
+                self.width - 80 + 30, self.height - 40 + 22,
+                self.width - 80 + 30, self.height - 40 + 38
+            ]
+            width: 1.5
+        
+        # Guides de mesure (si activé)
+        Color:
+            rgba: [1, 1, 1, 0.6]
+        # 15 cercles concentriques
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 1
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 2
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 3
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 4
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 5
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 6
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 7
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 8
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 9
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 10
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 11
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 12
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 13
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 14
+            width: 1
+        Line:
+            circle: self.center_x, self.center_y, min(self.width, self.height) * 0.05 * 15
+            width: 1
+            dash_offset: 5
+            dash_length: 5
+        
+        # Boules détectées
+        Color:
+            rgba: Constants.PIGLET_COLOR[0], Constants.PIGLET_COLOR[1], Constants.PIGLET_COLOR[2], 0.7
+        # Cochonnet
+        Line:
+            circle: root.get_piglet_position()
+            radius: Constants.PIGLET_RADIUS
+            width: 4
+        Color:
+            rgba: Constants.PIGLET_COLOR[0], Constants.PIGLET_COLOR[1], Constants.PIGLET_COLOR[2], 0.2
+        Ellipse:
+            pos: root.get_piglet_position()[0] - Constants.PIGLET_RADIUS, root.get_piglet_position()[1] - Constants.PIGLET_RADIUS
+            size: Constants.PIGLET_RADIUS * 2, Constants.PIGLET_RADIUS * 2
+        
+        # Boules
+        Color:
+            rgba: Constants.BALL_COLOR
+        # Pour chaque boule (sera géré dynamiquement dans le code)
+
+
+<DistanceCard>:
+    size_hint_y: None
+    height: dp(70)
+    padding: Constants.DEFAULT_PADDING
+    canvas.before:
+        Color:
+            rgba: Constants.SURFACE_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            radius: Constants.BORDER_RADIUS
+    
+    BoxLayout:
+        orientation: 'horizontal'
+        spacing: Constants.SMALL_PADDING
+        
+        # Rang
+        Label:
+            text: str(root.ball.id.split()[-1]) if root.ball else ''
+            font_size: sp(18)
+            bold: True
+            color: Constants.CLOSEST_BALL_COLOR if root.is_closest else Constants.BALL_COLOR
+            halign: 'center'
+            size_hint_x: None
+            width: dp(40)
+        
+        # Info de la boule
+        BoxLayout:
+            orientation: 'vertical'
+            
+            Label:
+                text: root.ball.id if root.ball else ''
+                font_size: sp(16)
+                bold: True
+                color: Constants.TEXT_COLOR
+                halign: 'left'
+            
+            Label:
+                text: f'Distance: {Helpers.format_distance(root.ball.distance_to_piglet)}' if root.ball else ''
+                font_size: sp(14)
+                color: [0.6, 0.6, 0.6, 1]
+                halign: 'left'
+        
+        # Icône de la boule la plus proche
+        Image:
+            source: 'assets/icons/star.png' if 'star.png' in app.root_window.children[0].ids else ''
+            size_hint: None, None
+            size: dp(24), dp(24)
+            opacity: 1 if root.is_closest else 0
+            color: Constants.CLOSEST_BALL_COLOR
+
+
+<ActionButton>:
+    size_hint: None, None
+    size: dp(120), dp(50)
+    background_normal: ''
+    background_color: root.background_color
+    color: root.text_color
+    
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            radius: Constants.BORDER_RADIUS

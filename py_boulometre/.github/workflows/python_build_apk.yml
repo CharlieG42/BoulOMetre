@@ -1,0 +1,112 @@
+name: PyBoulOMetre Build APK
+
+on:
+  push:
+    branches: [ py-kivy-version, main, vibe/** ]
+    paths:
+      - 'py_boulometre/**'
+  pull_request:
+    branches: [ py-kivy-version, main ]
+    paths:
+      - 'py_boulometre/**'
+
+jobs:
+  build_apk:
+    name: Build Android APK with Buildozer
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install Buildozer and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer
+          pip install -r py_boulometre/requirements.txt
+      
+      - name: Install Android SDK and NDK
+        uses: android-actions/setup-android@v3
+        with:
+          sdk-version: '33'
+          ndk-version: '23b'
+          cmake-version: '3.22.1'
+      
+      - name: Set Android environment variables
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+      
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+      
+      - name: Initialize Buildozer
+        working-directory: py_boulometre
+        run: |
+          buildozer init
+          # Remplacer le buildozer.spec par notre version
+          cp buildozer.spec buildozer.spec.bak 2>/dev/null || true
+      
+      - name: Build APK with Buildozer
+        working-directory: py_boulometre
+        run: |
+          # Configurer Buildozer pour Android
+          echo "Building APK..."
+          buildozer -v android debug 2>&1 | tee build.log
+        timeout-minutes: 60
+      
+      - name: Find APK file
+        working-directory: py_boulometre
+        run: |
+          # Trouver le fichier APK généré
+          find . -name "*.apk" -type f -exec ls -lh {} \;
+          APK_FILE=$(find . -name "*.apk" -type f | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            echo "APK_FILE=$APK_FILE" >> $GITHUB_ENV
+            echo "Found APK: $APK_FILE"
+          else
+            echo "No APK file found"
+            exit 1
+          fi
+      
+      - name: Rename APK to start with Py
+        working-directory: py_boulometre
+        run: |
+          if [ -n "$APK_FILE" ]; then
+            # Extraire le nom du fichier
+            APK_DIR=$(dirname "$APK_FILE")
+            APK_NAME=$(basename "$APK_FILE")
+            
+            # Renommer avec le préfixe Py
+            NEW_APK_NAME="PyBoulOMetre-${{ github.run_number }}-debug.apk"
+            NEW_APK_PATH="$APK_DIR/$NEW_APK_NAME"
+            
+            mv "$APK_FILE" "$NEW_APK_PATH"
+            echo "APK_FILE=$NEW_APK_PATH" >> $GITHUB_ENV
+            echo "Renamed APK to: $NEW_APK_NAME"
+          fi
+      
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PyBoulOMetre-APK
+          path: ${{ env.APK_FILE }}
+          retention-days: 7
+      
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-logs
+          path: py_boulometre/build.log
+          retention-days: 3

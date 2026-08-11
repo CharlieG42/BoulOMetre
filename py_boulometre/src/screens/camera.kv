@@ -1,0 +1,186 @@
+#:kivy 1.0
+#:import Constants src.utils.constants.Constants
+#:import Helpers src.utils.helpers.Helpers
+#:import ImageProcessor src.services.image_processor.ImageProcessor
+#:import Clock kivy.clock.Clock
+#:import cv2 cv2
+#:import numpy np
+
+<CameraScreen>:
+    FloatLayout:
+        # Aperçu de la caméra
+        Image:
+            id: camera_preview
+            size_hint: 1, 1
+            allow_stretch: True
+            keep_ratio: False
+        
+        # Overlay de la caméra
+        CameraOverlay:
+            id: camera_overlay
+            size_hint: 1, 1
+            balls: root.balls
+            show_measurement_guides: root.show_measurement_guides
+            is_selecting_balls: root.is_selecting_balls
+            horizontal_threshold: root.horizontal_threshold
+            on_piglet_position_changed: root.handle_piglet_position_changed
+            on_ball_added: root.add_ball_at_position
+        
+        # Message d'instruction en haut
+        Label:
+            id: instruction_label
+            text: 'Pointez la caméra vers les boules et le cochonnet' if not root.show_measurement_guides and not root.is_selecting_balls else \
+                  ('Ajustez le pointeur sur le cochonnet et validez' if root.show_measurement_guides else \
+                   f'Cliquez sur chaque boule ({len([b for b in root.balls if not b.is_piglet])})')
+            font_size: sp(16)
+            color: Constants.TEXT_LIGHT_COLOR
+            halign: 'center'
+            size_hint_y: None
+            height: dp(40)
+            pos_hint: {'top': 1, 'x': 0}
+            background_color: [0, 0, 0, 0.7]
+            canvas.before:
+                Color:
+                    rgba: self.background_color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: Constants.BORDER_RADIUS
+        
+        # Message de niveau en bas
+        Label:
+            id: level_message
+            text: 'Inclinez le téléphone à l\'horizontal' if not root.is_horizontal and not root.show_measurement_guides else ''
+            font_size: sp(14)
+            color: Constants.TEXT_LIGHT_COLOR
+            halign: 'center'
+            size_hint_y: None
+            height: dp(40)
+            pos_hint: {'bottom': 1, 'x': 0, 'y': dp(80)}
+            opacity: 1 if not root.is_horizontal and not root.show_measurement_guides else 0
+            background_color: [0, 0, 0, 0.7]
+            canvas.before:
+                Color:
+                    rgba: self.background_color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: Constants.BORDER_RADIUS
+        
+        # Boutons en bas
+        BoxLayout:
+            id: bottom_buttons
+            size_hint_y: None
+            height: dp(60)
+            pos_hint: {'bottom': 1, 'x': 0}
+            spacing: dp(20)
+            padding: dp(20), 0
+            
+            Button:
+                text: 'Annuler'
+                size_hint_x: None
+                width: dp(120)
+                background_color: [0.5, 0.5, 0.5, 1] if root.show_measurement_guides or root.is_selecting_balls else [0, 0, 0, 0]
+                color: Constants.TEXT_LIGHT_COLOR
+                on_press: root.cancel_measurement()
+                opacity: 1 if root.show_measurement_guides or root.is_selecting_balls else 0
+            
+            Button:
+                text: 'Valider' if root.show_measurement_guides else (f'Terminer ({len([b for b in root.balls if not b.is_piglet])})' if root.is_selecting_balls else '')
+                size_hint_x: None
+                width: dp(120)
+                background_color: Constants.PRIMARY_COLOR if (root.show_measurement_guides or (root.is_selecting_balls and len([b for b in root.balls if not b.is_piglet]) > 0)) else [0, 0, 0, 0]
+                color: Constants.TEXT_LIGHT_COLOR
+                on_press: root.confirm_measurement() if root.show_measurement_guides else (root.finish_ball_selection() if root.is_selecting_balls else None)
+                opacity: 1 if root.show_measurement_guides or root.is_selecting_balls else 0
+            
+            Button:
+                id: capture_button
+                text: ''
+                size_hint_x: None
+                width: dp(70)
+                height: dp(70)
+                background_normal: ''
+                background_color: Constants.PRIMARY_COLOR if root.is_horizontal else [0.5, 0.5, 0.5, 1]
+                disabled: not root.is_horizontal or root.is_processing or not root.is_camera_ready
+                on_press: root.capture_and_process()
+                opacity: 1 if not root.show_measurement_guides and not root.is_selecting_balls else 0
+                
+                canvas.before:
+                    Color:
+                        rgba: self.background_color
+                    Ellipse:
+                        pos: self.pos
+                        size: self.size
+                
+                Image:
+                    source: 'assets/icons/camera.png' if 'camera.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    center: self.center
+                    color: Constants.TEXT_LIGHT_COLOR
+        
+        # Boutons en haut à droite
+        BoxLayout:
+            id: top_buttons
+            size_hint: None, None
+            size: dp(120), dp(50)
+            pos_hint: {'top': 1, 'right': 1}
+            spacing: dp(5)
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0.5]
+                on_press: root.switch_camera()
+                
+                Image:
+                    source: 'assets/icons/switch_camera.png' if 'switch_camera.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.TEXT_LIGHT_COLOR
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0.5]
+                on_press: root.toggle_flash()
+                
+                Image:
+                    source: 'assets/icons/flash_on.png' if root.camera_service.flash_mode else 'assets/icons/flash_off.png'
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.TEXT_LIGHT_COLOR
+            
+            Button:
+                text: ''
+                size_hint: None, None
+                size: dp(40), dp(40)
+                background_normal: ''
+                background_color: [0, 0, 0, 0.5]
+                on_press: root.go_back()
+                
+                Image:
+                    source: 'assets/icons/close.png' if 'close.png' in app.root_window.children[0].ids else ''
+                    size_hint: None, None
+                    size: dp(24), dp(24)
+                    center: self.center
+                    color: Constants.TEXT_LIGHT_COLOR
+        
+        # Message d'erreur
+        Label:
+            id: error_label
+            text: root.error_message
+            font_size: sp(16)
+            color: [1, 0, 0, 1]
+            halign: 'center'
+            size_hint_y: None
+            height: dp(40)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            opacity: 1 if root.error_message else 0
