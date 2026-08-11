@@ -82,8 +82,11 @@ py_boulometre/
 │   │   ├── camera.py        # Logique de l'écran caméra
 │   │   ├── results.kv       # Écran résultats (KV language)
 │   │   └── results.py       # Logique de l'écran résultats
+│   │   ├── settings.kv      # Écran réglages (KV language)
+│   │   └── settings.py      # Logique de l'écran réglages
 │   ├── widgets/
-│   │   └── custom_widgets.py # Widgets personnalisés
+│   │   ├── custom_widgets.py # Widgets personnalisés
+│   │   └── custom_widgets.kv # Déclarations KV des widgets
 │   ├── models/
 │   │   └── ball.py          # Modèle Ball
 │   ├── services/
@@ -120,6 +123,9 @@ L'application utilise le langage KV de Kivy pour définir les interfaces utilisa
 - Distance par rapport au cochonnet
 - Identification de la boule la plus proche
 
+### Écran Réglages
+- Réglage de la sensibilité de l'horizontalité
+
 ## 📊 Modèles de données
 
 ### Ball
@@ -154,6 +160,112 @@ L'application utilise le langage KV de Kivy pour définir les interfaces utilisa
 - Formatage des distances
 - Calculs géométriques
 - Génération d'IDs
+
+## 🤖 Construction Automatique avec GitHub Actions
+
+### Workflow de Build
+
+Un workflow GitHub Actions est configuré pour **construire automatiquement l'APK** à chaque push sur la branche `py-kivy-version` ou `main` (quand des fichiers dans `py_boulometre/` sont modifiés).
+
+**Fichier du workflow** : `.github/workflows/python_build_apk.yml`
+
+### Déclenchement
+
+Le workflow se déclenche automatiquement dans les cas suivants :
+- ✅ **Push** sur les branches `py-kivy-version` ou `main`
+- ✅ **Pull Request** vers les branches `py-kivy-version` ou `main`
+- ✅ **Modifications** dans le dossier `py_boulometre/`
+
+### Processus de Build
+
+1. **Checkout** du dépôt
+2. **Setup Python 3.10**
+3. **Installation** de Buildozer et des dépendances
+4. **Configuration** de l'environnement Android (SDK, NDK)
+5. **Acceptation** des licences Android
+6. **Build** de l'APK avec Buildozer
+7. **Renommage** de l'APK avec le préfixe `PyBoulOMetre`
+8. **Upload** de l'APK comme artifact
+
+### Récupération de l'APK
+
+Après chaque build réussi :
+1. Allez dans l'onglet **Actions** de votre dépôt GitHub
+2. Sélectionnez le workflow **PyBoulOMetre Build APK**
+3. Cliquez sur le run le plus récent
+4. Dans la section **Artifacts**, téléchargez **PyBoulOMetre-APK**
+
+Le fichier APK portera le nom : `PyBoulOMetre-{NUMERO}-debug.apk`
+
+### Commande manuelle pour tester localement
+
+Si vous voulez tester le build localement avant de pousser :
+
+```bash
+cd py_boulometre
+pip install buildozer
+buildozer init
+buildozer -v android debug
+```
+
+L'APK sera généré dans `py_boulometre/bin/` avec un nom comme `pyboulometre-0.1-debug.apk`.
+
+## 📝 Configuration Buildozer
+
+Le fichier `buildozer.spec` est pré-configuré avec :
+- **Package name** : `pyboulometre`
+- **Package domain** : `com.charlieg42`
+- **Title** : `PyBoul'O'Mètre`
+- **Android API** : 33 (minimum: 21)
+- **Architecture** : arm64-v8a
+- **Bootstrap** : sdl2
+
+Vous pouvez modifier ces paramètres selon vos besoins.
+
+## ⚠️ Problèmes courants et solutions
+
+### 1. Erreur de caméra sur mobile
+**Problème** : La caméra ne s'initialise pas sur Android.
+**Solution** : Vérifiez que les permissions sont correctement configurées dans `buildozer.spec` :
+```ini
+android.permissions = CAMERA, VIBRATE
+android.api = 33
+android.minapi = 21
+```
+
+### 2. Buildozer échoue avec Android NDK
+**Problème** : Erreur de compilation liée au NDK.
+**Solution** : Assurez-vous d'utiliser la bonne version du NDK (23b) :
+```ini
+android.ndk = 23b
+```
+
+### 3. Dépendances manquantes
+**Problème** : Erreur d'importation de modules.
+**Solution** : Vérifiez que toutes les dépendances sont dans `requirements.txt` et installez-les :
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Problème de texture OpenCV
+**Problème** : Erreur de conversion d'image.
+**Solution** : Assurez-vous que OpenCV est installé :
+```bash
+pip install opencv-python
+```
+
+## 🔄 Comparaison avec la version Flutter
+
+| Aspect | Flutter | Python/Kivy |
+|--------|---------|--------------|
+| **Performance** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Taille APK** | ~10-15 Mo | ~20-30 Mo |
+| **Développement** | Dart | Python |
+| **UI Déclarative** | ✅ Widgets | ✅ KV Language |
+| **Accès Caméra** | ✅ Plugin camera | ✅ OpenCV |
+| **Build Android** | ✅ Flutter build | ✅ Buildozer |
+| **Hot Reload** | ✅ | ❌ |
+| **Communauté** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
 
 ## 🤝 Contribution
 
