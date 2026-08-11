@@ -1,3 +1,5 @@
+[app]
+
 # (str) Title of your application
 title = PyBoul'O'Mètre
 
@@ -27,6 +29,9 @@ requirements = python3,kivy==2.1.0,kivymd==1.1.1,Pillow==10.2.0,pyjnius==1.6.1
 
 # (str) Supported orientation
 orientation = portrait
+
+
+[android]
 
 # (list) List of android permissions to request
 android.permissions = INTERNET, CAMERA, VIBRATE, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
