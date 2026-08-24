@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Ajustez la sensibilité requise pour que le bouton de capture soit activé. ',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
-                  const SizedBox(height: AppConstants.defaultPadding),
+                  const SizedBox(height: AppConstants.largePadding),
                   Row(
                     children: [
                       const Text('Moins sensible'),
@@ -68,8 +68,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Slider(
                           value: _horizontalThreshold,
                           min: 0.05,
-                          max: 0.3,
-                          divisions: 25,
+                          max: 1.0,
+                          divisions: 95,
                           label: _horizontalThreshold.toStringAsFixed(2),
                           onChanged: (value) {
                             setState(() {
@@ -102,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: AppConstants.smallPadding),
                   const Text(
-                    '- Une valeur haute (0.2-0.3) est plus tolérante',
+                    '- Une valeur haute (0.5-1.0) est plus tolérante',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: AppConstants.largePadding),

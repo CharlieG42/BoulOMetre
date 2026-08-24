@@ -216,10 +216,10 @@ class _OverlayPainter extends CustomPainter {
     final maxTilt = 0.5; // About 30 degrees
     final tiltPercentage = (tilt / maxTilt).clamp(0.0, 1.0);
 
-    // Draw level indicator in top-right corner
+    // Draw level indicator in bottom-left corner
     final indicatorSize = 60.0;
-    final indicatorX = size.width - indicatorSize - 20;
-    final indicatorY = 20.0;
+    final indicatorX = 20.0;
+    final indicatorY = size.height - indicatorSize - 20;
 
     // Background
     final bgPaint = Paint()
