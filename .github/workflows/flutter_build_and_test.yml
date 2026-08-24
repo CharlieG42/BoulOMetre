@@ -34,6 +34,11 @@ jobs:
           cp -r boul_o_metre/android /home/runner/work/BoulOMetre/BoulOMetre/
           rm -rf boul_o_metre
 
+      - name: Decode and create keystore
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -43,8 +48,16 @@ jobs:
       - name: Run Flutter tests
         run: flutter test || true
 
-      - name: Build APK (Release)
-        run: flutter build apk --release
+      - name: Build signed APK (Release)
+        run: |
+          flutter build apk --release \
+            --build-name=1.0.${{ github.run_number }} \
+            --build-number=${{ github.run_number }}
+        env:
+          ANDROID_KEYSTORE_PATH: android/app/release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: List build output (debug)
         run: find . -name "*.apk" -type f
